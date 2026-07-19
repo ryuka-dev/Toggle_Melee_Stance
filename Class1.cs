@@ -19,7 +19,7 @@ namespace ToggleMeleeStance
     {
         public const string PluginGuid = "kumo.sulfur.toggle_melee_stance";
         public const string PluginName = "Toggle Melee Stance";
-        public const string PluginVersion = "1.2.0";
+        public const string PluginVersion = "1.3.0";
 
         public const string MeleeExpansionGuid = "kumo.sulfur.melee_expansion";
 
@@ -39,6 +39,14 @@ namespace ToggleMeleeStance
 
         private static Type equipmentManagerType;
         private static Type weaponType;
+        private static Type interactableType;
+        private static Type gameManagerType;
+
+        // When our toggle stance is active, allow interaction that vanilla blocks purely
+        // because the current slot is BasicMelee. Only override while the stance is being
+        // actively maintained (see LastMaintainTime), so game-halted states such as the
+        // straitjacket status, flashbacks, and pause keep their vanilla interaction lockouts.
+        private const float StanceLivenessWindow = 0.5f;
 
         private static MethodInfo mHandleAimInput;
         private static MethodInfo mHandleMeleeInput;
@@ -51,9 +59,12 @@ namespace ToggleMeleeStance
         private static MethodInfo mIsMeleeCharging;
         private static MethodInfo mChargeMelee;
         private static MethodInfo mSetAlternativeState;
+        private static MethodInfo mCanInteract;
 
         private static PropertyInfo pIsMelee;
         private static PropertyInfo pAnimator;
+        private static PropertyInfo pGameManagerInstance;
+        private static PropertyInfo pGameManagerEquipmentManager;
 
         private static FieldInfo fAltFireAction;
         private static FieldInfo fMeleeFireAction;
@@ -164,6 +175,23 @@ namespace ToggleMeleeStance
             Patch(mReportMeleeDone, prefix: nameof(ReportMeleeDonePrefix), postfix: nameof(ReportMeleeDonePostfix));
             Patch(mChargeMelee, postfix: nameof(ChargeMeleePostfix));
 
+            // Optional: restore item pickup / interaction while the toggle melee stance is
+            // active. Vanilla Interactable.CanInteract() blocks all interaction whenever the
+            // current slot is BasicMelee, which our persistent stance holds indefinitely.
+            // If this hook cannot be resolved the rest of the mod still functions.
+            if (mCanInteract != null && pGameManagerInstance != null && pGameManagerEquipmentManager != null)
+            {
+                Patch(mCanInteract, postfix: nameof(CanInteractPostfix));
+            }
+            else
+            {
+                Logger.LogWarning(
+                    "Interaction-in-melee-stance fix disabled: could not resolve " +
+                    "Interactable.CanInteract or GameManager equipment access. " +
+                    "Item pickup will be blocked while melee stance is active."
+                );
+            }
+
             Logger.LogInfo("Toggle Melee Stance loaded.");
         }
 
@@ -270,6 +298,27 @@ namespace ToggleMeleeStance
                 weaponType,
                 "currentParries"
             );
+
+            // Optional members for the interaction-in-melee-stance fix. These are not part of
+            // the required set: if any is missing the mod still loads and only that fix is skipped.
+            interactableType = AccessTools.TypeByName(
+                "PerfectRandom.Sulfur.Core.World.Interactable"
+            );
+
+            gameManagerType = AccessTools.TypeByName(
+                "PerfectRandom.Sulfur.Core.GameManager"
+            );
+
+            if (interactableType != null)
+            {
+                mCanInteract = AccessTools.Method(interactableType, "CanInteract", Type.EmptyTypes);
+            }
+
+            if (gameManagerType != null)
+            {
+                pGameManagerInstance = FindPropertyRecursive(gameManagerType, "Instance");
+                pGameManagerEquipmentManager = FindPropertyRecursive(gameManagerType, "EquipmentManager");
+            }
 
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
@@ -467,6 +516,11 @@ namespace ToggleMeleeStance
                 return true;
 
             ToggleState state = GetState(__instance);
+
+            // Mark the stance as actively maintained this frame so the interaction fix knows
+            // the equipment input pump is live (see CanInteractPostfix).
+            if (state.IsToggled)
+                state.LastMaintainTime = Time.time;
 
             if (state.SuppressMeleeUntilReleased)
             {
@@ -694,6 +748,49 @@ namespace ToggleMeleeStance
             CacheSafeMeleeAnimatorStateIfUseful(__instance, "ChargeMelee(true)");
         }
 
+        private static void CanInteractPostfix(ref bool __result)
+        {
+            // Vanilla already allows interaction; nothing to do.
+            if (__result)
+                return;
+
+            if (!IsModActive())
+                return;
+
+            object equipmentManager = GetLocalEquipmentManager();
+
+            if (equipmentManager == null)
+                return;
+
+            ToggleState state = GetState(equipmentManager);
+
+            if (state == null || !state.IsToggled)
+                return;
+
+            // Only override while the stance is actively maintained this frame. When the game
+            // stops driving equipment input (straitjacket status, flashback, pause) our stamp
+            // goes stale and we defer to vanilla, preserving its interaction lockouts. In the
+            // live case, vanilla returned false solely because the current slot is BasicMelee,
+            // which is exactly the state our persistent stance holds, so interaction is restored.
+            if (Time.time - state.LastMaintainTime > StanceLivenessWindow)
+                return;
+
+            __result = true;
+        }
+
+        private static object GetLocalEquipmentManager()
+        {
+            if (pGameManagerInstance == null || pGameManagerEquipmentManager == null)
+                return null;
+
+            object gameManager = pGameManagerInstance.GetValue(null, null);
+
+            if (gameManager == null)
+                return null;
+
+            return pGameManagerEquipmentManager.GetValue(gameManager, null);
+        }
+
         private static void ToggleOn(object equipmentManager, ToggleState state)
         {
             state.IsToggled = true;
@@ -701,6 +798,7 @@ namespace ToggleMeleeStance
             state.SheatheAfterAttack = false;
             state.SuppressMeleeUntilReleased = false;
             state.NextChargeAttemptTime = Time.time + ClampRetryInterval();
+            state.LastMaintainTime = Time.time;
 
             state.PendingTapHold = false;
             state.LongPressPassThrough = false;
@@ -1373,6 +1471,10 @@ namespace ToggleMeleeStance
             public bool LongPressPassThrough;
             public bool WasMeleeHeldLastFrame;
             public float MeleePressStartTime;
+
+            // Time.time of the last frame the toggle stance was actively maintained. Used by the
+            // interaction fix to avoid overriding vanilla lockouts when equipment input is halted.
+            public float LastMaintainTime;
         }
 
         private sealed class SafeAnimatorState
