@@ -1,0 +1,9 @@
+{
+  "name": "Toggle_Melee_Stance",
+  "version_number": "1.3.0",
+  "website_url": "https://github.com/ryuka-dev/Toggle_Melee_Stance",
+  "description": "Shared toggle melee stance module with tap/hold melee input, Fire-to-melee, and compatibility handling for external weapon switches.",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2305"
+  ]
+}

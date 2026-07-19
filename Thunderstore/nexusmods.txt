@@ -1,0 +1,267 @@
+[font=Arial Black][color=DarkOrange][size=5][b]Toggle Melee Stance[/b][/size][/color][/font]
+
+A shared melee stance module and quality-of-life mod for [b]SULFUR[/b].
+
+It changes melee from hold-to-use into a toggle stance, while keeping the original hold melee behavior available through tap / hold input.
+
+This mod can be used by itself, and it is also used as the shared prerequisite melee stance module for [b]The Dragonblade[/b].
+
+[color=RoyalBlue][b]What This Mod Does[/b][/color]
+
+[list]
+[*]Press the game's melee action once to keep your melee weapon drawn.[/*]
+[*]Press the melee action again to sheathe it and return to your previous weapon.[/*]
+[*]Tap the melee key to toggle melee stance.[/*]
+[*]Hold the melee key to use the original melee behavior.[/*]
+[*]While melee stance is toggled on, press the normal Fire action to perform one melee attack.[/*]
+[*]While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.[/*]
+[*]Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.[/*]
+[*]Uses SULFUR's own input actions instead of hardcoded mouse buttons, so it should work with rebinding, controller, and Steam Deck layouts.[/*]
+[*]Keeps the original melee attack, parry, alternative stance, and weapon-specific behavior.[/*]
+[*]Fixes a visual issue where some melee weapons could briefly flash an attack animation on repeated draw by resetting the melee Animator to a safe cached equip state before sheathing.[/*]
+[*]Handles external weapon switches safely, so a weapon-randomizing mod switching you to a gun should not leave melee stance blocking Fire input.[/*]
+[*]Exposes a small public API that other mods can use to read the current toggle melee stance state.[/*]
+[/list]
+[color=RoyalBlue][b]What This Mod Does NOT Do[/b][/color]
+
+[list]
+[*]Does not change melee damage.[/*]
+[*]Does not change weapon durability.[/*]
+[*]Does not change enemy AI.[/*]
+[*]Does not edit save files.[/*]
+[*]Does not replace or rebalance melee weapons.[/*]
+[*]Does not add new melee moves such as dashes or thrust attacks.[/*]
+[/list]
+[color=RoyalBlue][b]Basic Controls[/b][/color]
+
+[code]Tap Melee key
+→ Toggle melee stance on / off
+
+Hold Melee key
+→ Use the original melee behavior
+→ Release to perform the original melee attack
+→ Return to the previous weapon
+
+Fire
+→ Perform one melee attack while melee stance is toggled on
+
+Aim / Alt Fire
+→ Keep vanilla alternative melee stance / block behavior[/code]
+The mod does not hardcode [color=#ffff00]F[/color], mouse buttons, or controller buttons.
+
+It uses the game's own input actions, so it should respect key rebinding and controller input better than raw key checks.
+
+[color=RoyalBlue][b]Shared Module Behavior[/b][/color]
+
+Starting from [color=#ffff00]1.2.0[/color], Toggle Melee Stance is intended to be the shared stance foundation for other melee-focused mods.
+
+The Dragonblade should no longer duplicate the same toggle melee patches internally. Instead, it should depend on this mod and read the stance state through the public API.
+
+This avoids double-patching the same melee input methods and reduces the chance of both mods fighting over the same internal melee state.
+
+[color=RoyalBlue][b]Public API For Other Mods[/b][/color]
+
+The public API is exposed through:
+
+[code]ToggleMeleeStance.Plugin[/code]
+Available methods:
+
+[code]IsRuntimeReady
+IsMeleeStanceActive(object equipmentManager)
+IsAttackInProgress(object equipmentManager)
+IsSheatheAfterAttack(object equipmentManager)
+IsMeleeChargeActive(object equipmentManager)
+GetCurrentHoldableForExternal(object equipmentManager)
+IsCurrentHoldableMeleeForExternal(object equipmentManager)[/code]
+These are intended for mods such as The Dragonblade to check whether melee stance is active without patching the same melee input methods again.
+
+[color=RoyalBlue][b]Configuration[/b][/color]
+
+Config file:
+
+[code]BepInEx/config/kumo.sulfur.toggle_melee_stance.cfg[/code]
+Default options:
+
+[code][General]
+EnableMod = true
+
+[Melee]
+FirePerformsMeleeAttack = true
+ReChargeRetryInterval = 0.08
+EnableTapHoldMeleeKey = true
+MeleeToggleTapThreshold = 0.13
+
+[Visual]
+ResetMeleeAnimatorBeforeSheathe = true
+
+[Compatibility]
+DisableWhenMeleeExpansionDetected = false
+KeepMeleeStanceAfterExternalWeaponSwitch = false
+
+[Debug]
+LogStateChanges = false[/code]
+[color=RoyalBlue][b]Option Details[/b][/color]
+
+[color=#ffff00]EnableMod[/color]
+
+Enables or disables the mod.
+
+[color=#ffff00]FirePerformsMeleeAttack[/color]
+
+When enabled, pressing the normal Fire action while melee is toggled on performs one melee attack.
+
+[color=#ffff00]ReChargeRetryInterval[/color]
+
+Controls how often the mod retries re-entering melee stance after the game clears the melee charge state.
+
+[color=#ffff00]EnableTapHoldMeleeKey[/color]
+
+When enabled, tapping the melee key toggles melee stance, while holding the melee key passes through to the original melee behavior.
+
+[color=#ffff00]MeleeToggleTapThreshold[/color]
+
+Maximum press duration treated as a tap.
+
+Default:
+
+[code]MeleeToggleTapThreshold = 0.13[/code]
+Lower values make hold behavior activate faster.
+
+Higher values make tap behavior easier.
+
+[color=#ffff00]ResetMeleeAnimatorBeforeSheathe[/color]
+
+Keeps repeated melee draws visually stable by resetting the melee Animator to a cached safe equip state before sheathing.
+
+[color=#ffff00]DisableWhenMeleeExpansionDetected[/color]
+
+Deprecated.
+
+Older versions used this to auto-disable Toggle Melee Stance when [color=#ffff00]kumo.sulfur.melee_expansion[/color] was installed.
+
+Starting from this version, The Dragonblade is expected to use Toggle Melee Stance as a prerequisite, so this option defaults to [color=#ffff00]false[/color] and is no longer recommended.
+
+[color=#ffff00]KeepMeleeStanceAfterExternalWeaponSwitch[/color]
+
+Controls behavior when another mod changes the current weapon while melee stance is toggled on.
+
+[code]false
+→ Recommended default.
+→ If another mod switches your weapon while melee stance is active, this mod exits stance when you try to fire.
+→ This allows guns to shoot normally after an external weapon switch.
+
+true
+→ Tries to keep melee stance even after another mod switches your weapon.
+→ This may conflict with weapon-randomizing mods.[/code]
+[color=#ffff00]LogStateChanges[/color]
+
+Enables debug logging. Keep this disabled for normal gameplay.
+
+[color=RoyalBlue][b]Installation[/b][/color]
+
+[color=DodgerBlue][b]With a Mod Manager[/b][/color]
+
+Install through Thunderstore / r2modman if available.
+
+[color=DodgerBlue][b]Manual Installation[/b][/color]
+
+[list=1]
+[*]Install BepInEx for SULFUR.[/*]
+[*]Extract this package into your SULFUR game folder.[/*]
+[*]Make sure the DLL ends up here:[/*]
+[/list]
+[code]SULFUR/BepInEx/plugins/Toggle Melee Stance.dll[/code]
+4. Start the game once to generate the config file.
+
+[color=RoyalBlue][b]Compatibility[/b][/color]
+
+This mod does not edit original game files.
+
+It should be compatible with most mods. Compatibility issues are most likely with mods that also patch:
+
+[list]
+[*][color=#ffff00]EquipmentManager.HandleMeleeInput[/color][/*]
+[*][color=#ffff00]EquipmentManager.HandleAimInput[/color][/*]
+[*][color=#ffff00]EquipmentManager.PullTrigger[/color][/*]
+[*][color=#ffff00]Weapon.ReportMeleeDone[/color][/*]
+[*][color=#ffff00]Interactable.CanInteract[/color][/*]
+[*]melee weapon Animator behavior[/*]
+[/list]
+The Dragonblade [color=#ffff00]0.3.0+[/color] is expected to use this mod as a prerequisite instead of duplicating the same melee stance patches.
+
+[color=RoyalBlue][b]Uninstallation[/b][/color]
+
+Remove the DLL from:
+
+[code]BepInEx/plugins/[/code]
+Optional: remove the config file:
+
+[code]BepInEx/config/kumo.sulfur.toggle_melee_stance.cfg[/code]
+[color=RoyalBlue][b]SULFUR Config Localization Support[/b][/color]
+
+This mod includes localization files for SULFUR Config.
+
+This localization support is only for the in-game configuration page provided by SULFUR Config. It localizes the mod name, config sections, setting names, and setting descriptions shown in the config UI.
+
+It does not change the game's own text, item names, dialogue, or gameplay content.
+
+Supported SULFUR Config languages:
+
+[list]
+[*]English[/*]
+[*]Simplified Chinese[/*]
+[*]Swedish[/*]
+[*]French[/*]
+[*]Italian[/*]
+[*]German[/*]
+[*]Spanish[/*]
+[*]Portuguese[/*]
+[*]Russian[/*]
+[*]Polish[/*]
+[*]Japanese[/*]
+[*]Korean[/*]
+[*]Turkish[/*]
+[*]Arabic[/*]
+[/list]
+[font=Arial Black][color=DarkOrange][size=5][b]Changelog[/b][/size][/color][/font]
+
+[color=RoyalBlue][b]1.3.0[/b][/color]
+
+[list]
+[*]Fixed item pickup and interaction being blocked while melee stance is toggled on. The game only allows interaction when the basic melee slot is not active, and the persistent stance held that slot indefinitely, which hid item name prompts and prevented picking anything up. Interaction now works while melee stance is active.[/*]
+[*]Interaction lockouts that the game applies for other reasons (such as the straitjacket status) are still respected.[/*]
+[*]Verified compatibility with SULFUR v0.18.5. No patch targets changed.[/*]
+[/list]
+[color=RoyalBlue][b]1.2.2[/b][/color]
+
+[list]
+[*]Added SULFUR Config localization files for the in-game configuration page (14 languages). No gameplay changes.[/*]
+[/list]
+[color=RoyalBlue][b]1.2.0[/b][/color]
+
+[list]
+[*]Changed this mod into the shared prerequisite melee stance module for The Dragonblade.[/*]
+[*]Added public API for other mods to read melee stance state.[/*]
+[*]Stopped auto-disabling when [color=#ffff00]kumo.sulfur.melee_expansion[/color] is installed.[/*]
+[*]Changed default [color=#ffff00]MeleeToggleTapThreshold[/color] from [color=#ffff00]0.22[/color] to [color=#ffff00]0.13[/color] for faster hold-melee passthrough.[/*]
+[*]Kept external weapon switch compatibility so guns can fire normally after another mod switches the current weapon.[/*]
+[/list]
+[color=RoyalBlue][b]1.1.0[/b][/color]
+
+[list]
+[*]Added tap / hold melee key behavior.[/*]
+[*]Tap melee key toggles melee stance.[/*]
+[*]Hold melee key uses the original melee behavior.[/*]
+[*]Added external weapon switch compatibility.[/*]
+[/list]
+[color=RoyalBlue][b]1.0.0[/b][/color]
+
+[list]
+[*]Initial release.[/*]
+[*]Added toggle melee stance.[/*]
+[*]Added Fire action melee attack while toggled.[/*]
+[*]Preserved vanilla Aim / alternative stance / block behavior.[/*]
+[*]Added safe sheathe behavior so pressing melee again does not trigger an extra attack.[/*]
+[*]Added melee Animator safe-state reset to prevent repeated draw animation flashes.[/*]
+[*]Added compatibility auto-disable for future Melee Expansion mod.[/*]
+[/list]

@@ -32,13 +32,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\sulfur\profiles\Default\BepInEx\core\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(SulfurBepInExCoreDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\sulfur\profiles\Default\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>$(SulfurBepInExCoreDir)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(SulfurManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,40 +52,52 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Unity.InputSystem">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\Unity.InputSystem.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.AudioModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.AudioModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\SULFUR\Sulfur_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(SulfurManagedDir)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -90,4 +105,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="DeployToGaleProfile" AfterTargets="Build" Condition="'$(DeployToSulfurProfile)' == 'true'">
+    <ItemGroup>
+      <LangFiles Include="$(ThunderstoreDir)\lang\*.json" />
+    </ItemGroup>
+    <MakeDir Directories="$(SulfurBepInExPluginsDir)\Toggle Melee Stance" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(SulfurBepInExPluginsDir)\Toggle Melee Stance" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ThunderstoreDir)" />
+    <Copy SourceFiles="@(LangFiles)" DestinationFolder="$(SulfurBepInExPluginsDir)\Toggle Melee Stance\lang" Condition="'@(LangFiles)' != ''" />
+  </Target>
 </Project>

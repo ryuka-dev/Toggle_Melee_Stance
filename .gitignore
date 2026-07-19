@@ -6,6 +6,8 @@ obj/
 .vs/
 *.user
 
-# Packaging output
-dist/
+# Build products / packaging artifacts (never committed)
+*.dll
 *.zip
+*.psd
+dist/
