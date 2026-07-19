@@ -19,7 +19,7 @@ namespace ToggleMeleeStance
     {
         public const string PluginGuid = "kumo.sulfur.toggle_melee_stance";
         public const string PluginName = "Toggle Melee Stance";
-        public const string PluginVersion = "1.3.0";
+        public const string PluginVersion = "1.4.0";
 
         public const string MeleeExpansionGuid = "kumo.sulfur.melee_expansion";
 
@@ -31,6 +31,7 @@ namespace ToggleMeleeStance
         internal static ConfigEntry<bool> DisableWhenMeleeExpansionDetected;
         internal static ConfigEntry<bool> KeepMeleeStanceAfterExternalWeaponSwitch;
         internal static ConfigEntry<bool> EnableTapHoldMeleeKey;
+        internal static ConfigEntry<bool> SwapQuickMeleeAndEquipMelee;
         internal static ConfigEntry<float> MeleeToggleTapThreshold;
         internal static ConfigEntry<float> ReChargeRetryInterval;
         internal static ConfigEntry<bool> LogStateChanges;
@@ -140,6 +141,13 @@ namespace ToggleMeleeStance
                 "EnableTapHoldMeleeKey",
                 true,
                 "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+            );
+
+            SwapQuickMeleeAndEquipMelee = Config.Bind(
+                "Melee",
+                "SwapQuickMeleeAndEquipMelee",
+                false,
+                "Requires EnableTapHoldMeleeKey. Swaps the tap and hold melee actions. Default false: tap the melee key toggles melee stance, hold performs the original quick melee attack. When true: tap performs the original quick melee attack, hold toggles melee stance."
             );
 
             MeleeToggleTapThreshold = Config.Bind(
@@ -555,7 +563,12 @@ namespace ToggleMeleeStance
             {
                 bool prefixResult;
 
-                if (HandleTapHoldMeleeInput(__instance, state, holdingMeleeAction, out prefixResult))
+                bool handled =
+                    SwapQuickMeleeAndEquipMelee != null && SwapQuickMeleeAndEquipMelee.Value
+                        ? HandleTapHoldMeleeInputSwapped(__instance, state, holdingMeleeAction, out prefixResult)
+                        : HandleTapHoldMeleeInput(__instance, state, holdingMeleeAction, out prefixResult);
+
+                if (handled)
                 {
                     return prefixResult;
                 }
@@ -1176,6 +1189,80 @@ namespace ToggleMeleeStance
                 state.MeleePressStartTime = Time.time;
 
                 prefixResult = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        // Swapped mapping: tap performs the original quick melee attack, hold toggles melee
+        // stance. Unlike the default handler, the initial press is passed through to the game so
+        // it starts the vanilla melee charge. A release before the tap threshold then produces a
+        // normal vanilla quick-melee swing (the same passthrough path the default handler uses
+        // for holds), while crossing the threshold promotes the ongoing charge into our
+        // persistent stance.
+        private static bool HandleTapHoldMeleeInputSwapped(
+            object equipmentManager,
+            ToggleState state,
+            bool holdingMeleeAction,
+            out bool prefixResult
+        )
+        {
+            prefixResult = true;
+
+            bool held = holdingMeleeAction || IsMeleeHeld(equipmentManager);
+            bool justPressed = held && !state.WasMeleeHeldLastFrame;
+
+            state.WasMeleeHeldLastFrame = held;
+
+            if (state.PendingTapHold)
+            {
+                float heldTime = Time.time - state.MeleePressStartTime;
+
+                if (!held)
+                {
+                    // Released before the threshold: this was a tap. The game already charged on
+                    // press and performs the quick melee attack on this release frame, so let it
+                    // pass through untouched.
+                    state.PendingTapHold = false;
+
+                    if (LogStateChanges.Value)
+                    {
+                        Log?.LogInfo("Melee key tap detected (swapped). Original quick melee attack.");
+                    }
+
+                    prefixResult = true;
+                    return true;
+                }
+
+                if (heldTime >= GetMeleeToggleTapThreshold())
+                {
+                    // Held past the threshold: promote the ongoing charge into melee stance and
+                    // take over from the game for the rest of this press.
+                    state.PendingTapHold = false;
+                    ToggleOn(equipmentManager, state);
+
+                    if (LogStateChanges.Value)
+                    {
+                        Log?.LogInfo("Melee key hold detected (swapped). Toggle melee ON.");
+                    }
+
+                    prefixResult = false;
+                    return true;
+                }
+
+                // Still under the threshold and still held: let the game keep charging so a
+                // release right now still fires a quick melee.
+                prefixResult = true;
+                return true;
+            }
+
+            if (justPressed)
+            {
+                state.PendingTapHold = true;
+                state.MeleePressStartTime = Time.time;
+
+                prefixResult = true;
                 return true;
             }
 

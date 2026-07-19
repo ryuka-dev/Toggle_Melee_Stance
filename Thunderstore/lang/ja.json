@@ -85,6 +85,14 @@
       "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
     },
     {
+      "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
+      "value": "クイック近接と近接構えを入れ替え"
+    },
+    {
+      "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
+      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+    },
+    {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
       "value": "近接切替タップしきい値"
     },

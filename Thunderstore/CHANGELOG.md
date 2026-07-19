@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- Added `SwapQuickMeleeAndEquipMelee` option. When enabled (and tap/hold input is on), tap the melee key to perform the original quick melee attack and hold the melee key to toggle melee stance. Default keeps the existing mapping: tap toggles stance, hold performs the quick melee attack.
+
 ## 1.3.0
 
 - Fixed item pickup and interaction being blocked while melee stance is toggled on. The game only allows interaction when the basic melee slot is not active, and the persistent stance held that slot indefinitely, which hid item name prompts and prevented picking anything up. Interaction now works while melee stance is active.

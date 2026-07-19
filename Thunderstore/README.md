@@ -12,6 +12,7 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - Press the melee action again to sheathe it and return to your previous weapon.
 - Tap the melee key to toggle melee stance.
 - Hold the melee key to use the original melee behavior.
+- Optionally swap the tap and hold actions, so tap performs the quick melee and hold toggles the stance.
 - While melee stance is toggled on, press the normal Fire action to perform one melee attack.
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
 - Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.
@@ -100,6 +101,7 @@ EnableMod = true
 FirePerformsMeleeAttack = true
 ReChargeRetryInterval = 0.08
 EnableTapHoldMeleeKey = true
+SwapQuickMeleeAndEquipMelee = false
 MeleeToggleTapThreshold = 0.13
 
 [Visual]
@@ -130,6 +132,21 @@ Controls how often the mod retries re-entering melee stance after the game clear
 `EnableTapHoldMeleeKey`
 
 When enabled, tapping the melee key toggles melee stance, while holding the melee key passes through to the original melee behavior.
+
+`SwapQuickMeleeAndEquipMelee`
+
+Requires `EnableTapHoldMeleeKey`. Swaps which action is tap and which is hold.
+
+```text
+false
+→ Default.
+→ Tap the melee key to toggle melee stance.
+→ Hold the melee key to perform the original quick melee attack.
+
+true
+→ Tap the melee key to perform the original quick melee attack.
+→ Hold the melee key to toggle melee stance.
+```
 
 `MeleeToggleTapThreshold`
 
