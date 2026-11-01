@@ -130,7 +130,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Con la postura da mischia attiva, i comandi di selezione arma escono dalla postura. I tasti degli slot arma (1-5 di default) passano a quello slot. Il tasto dell'ultima arma usata e il cambio arma con la rotellina del mouse o la croce direzionale del controller tornano all'arma che avevi prima della postura. Uno slot scelto durante un attacco in mischia viene selezionato al termine dell'attacco. I consumabili negli slot 3-5 vengono usati senza uscire dalla postura da mischia."
+      "value": "Con la postura da mischia attiva, i comandi di selezione arma escono dalla postura. I tasti degli slot arma (1-5 di default) passano a quello slot. Il tasto dell'ultima arma usata e il cambio arma con la rotellina del mouse o la croce direzionale del controller tornano all'arma che avevi prima della postura. Comunque finisca la postura, il tasto dell'ultima arma usata ti riporta poi nella postura da mischia, finché non passi a un'altra arma. Uno slot scelto durante un attacco in mischia viene selezionato al termine dell'attacco. I consumabili negli slot 3-5 vengono usati senza uscire dalla postura da mischia."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

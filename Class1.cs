@@ -76,6 +76,7 @@ namespace ToggleMeleeStance
         private static FieldInfo fAltFireAction;
         private static FieldInfo fMeleeFireAction;
         private static FieldInfo fMeleeFireActionAlternative;
+        private static FieldInfo fSelectLastUsedAction;
 
         private static FieldInfo fCurrentHoldable;
         private static FieldInfo fEquipmentManager;
@@ -193,7 +194,7 @@ namespace ToggleMeleeStance
                 "Melee",
                 "WeaponSwitchExitsMeleeStance",
                 true,
-                "When melee stance is on, the weapon selection controls leave it. The weapon slot keys (1-5 by default) switch to that slot. The last used weapon key and weapon cycling with the scroll wheel or gamepad d-pad return to the weapon you held before the stance. A slot chosen during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
+                "When melee stance is on, the weapon selection controls leave it. The weapon slot keys (1-5 by default) switch to that slot. The last used weapon key and weapon cycling with the scroll wheel or gamepad d-pad return to the weapon you held before the stance. However the stance ends, the last used weapon key then takes you back into it, until you switch to another weapon. A slot chosen during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
             );
 
             LogStateChanges = Config.Bind(
@@ -402,6 +403,14 @@ namespace ToggleMeleeStance
             fAltFireAction = FindFieldRecursive(equipmentManagerType, "altFireAction");
             fMeleeFireAction = FindFieldRecursive(equipmentManagerType, "meleeFireAction");
             fMeleeFireActionAlternative = FindFieldRecursive(equipmentManagerType, "meleeFireActionAlternative");
+
+            // Optional: tells the last used weapon key apart from the game's own calls to
+            // SelectLastUsedWeapon (a spent throwable). Without it the key does not go back into
+            // the stance after leaving it (see TryReturnToStance).
+            fSelectLastUsedAction = FindFieldRecursive(equipmentManagerType, "selectLastUsedAction");
+
+            if (fSelectLastUsedAction != null && !typeof(InputAction).IsAssignableFrom(fSelectLastUsedAction.FieldType))
+                fSelectLastUsedAction = null;
 
             fCurrentHoldable = FindFieldRecursive(equipmentManagerType, "currentHoldable");
             fEquipmentManager = FindFieldRecursive(weaponType, "equipmentManager");
@@ -1133,6 +1142,10 @@ namespace ToggleMeleeStance
                     Log?.LogInfo("Melee attack finished. Staying sheathed.");
                 }
 
+                // The stance ends here. A slot selection replayed below is part of this exit, so
+                // the remembered slot follows it (ChangeWeaponPostfix).
+                RememberStanceAsLastUsed(equipmentManager, state);
+
                 // The game has switched back to the cached weapon and allows weapon changes again,
                 // so a selection the player made during the attack can now be performed.
                 ReplayPendingWeaponSelection(equipmentManager, state);
@@ -1192,6 +1205,17 @@ namespace ToggleMeleeStance
             if (!States.TryGetValue(__instance, out state) || state == null)
                 return;
 
+            // "The stance was the last used item" (see RememberStanceAsLastUsed). A weapon change in
+            // the frame the stance ended is part of that exit, so the slot follows it. Any later
+            // switch to another slot is an ordinary weapon change and ends it.
+            if (state.StanceIsLastUsed)
+            {
+                if (Time.frameCount == state.StanceExitFrame && !IsBasicMeleeSlotSelected(__instance))
+                    state.StanceReturnSlot = pWeaponCurrentSlot.GetValue(__instance, null);
+                else if (!IsStanceReturnSlotSelected(__instance, state))
+                    ClearStanceAsLastUsed(state);
+            }
+
             if (!state.AttackInProgress && !state.SheatheAfterAttack)
                 return;
 
@@ -1238,6 +1262,9 @@ namespace ToggleMeleeStance
                 state.IsToggled = false;
                 state.SuppressMeleeUntilReleased = true;
                 state.NextChargeAttemptTime = 0f;
+
+                // The stance ends on the weapon the game has switched to.
+                RememberStanceAsLastUsed(equipmentManager, state);
             }
             else if (state.IsToggled)
             {
@@ -1304,6 +1331,11 @@ namespace ToggleMeleeStance
         {
             // QuickMeleeChordToggle: the key during a quick melee charge enters the stance instead.
             if (TryEnterStanceFromChord(__instance, "last used weapon key"))
+                return false;
+
+            // After the stance has ended, the key goes back into it: the stance counts as one of the
+            // two most recently used items the key alternates between.
+            if (TryReturnToStance(__instance))
                 return false;
 
             return !HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.LastUsed, null, "last used weapon");
@@ -1534,6 +1566,10 @@ namespace ToggleMeleeStance
             SetMeleePressed(equipmentManager, false);
             SetAlternativeMeleePressed(equipmentManager, false);
 
+            // The stance ends here. A slot key goes on to its slot in the same frame, and the
+            // remembered slot follows it (ChangeWeaponPostfix).
+            RememberStanceAsLastUsed(equipmentManager, state);
+
             if (LogStateChanges != null && LogStateChanges.Value)
             {
                 Log?.LogInfo(
@@ -1541,6 +1577,126 @@ namespace ToggleMeleeStance
                     "Toggle melee OFF."
                 );
             }
+        }
+
+        // The last used weapon key alternates between the two most recently used weapons, and the
+        // stance counts as one of them. Every way the stance ends records it here (ToggleOff, the
+        // completed or interrupted sheathe, the retry-window exit, the external weapon switch exit),
+        // so the next press of the key goes back into the stance. The slot is taken once the exit
+        // has settled: a ChangeWeapon later in the same frame (a slot key, a replayed selection) is
+        // part of the exit and moves the slot along (ChangeWeaponPostfix). A later switch to any
+        // other slot, every ToggleOn, and turning the option off clear it.
+        private static void RememberStanceAsLastUsed(object equipmentManager, ToggleState state)
+        {
+            if (WeaponSwitchExitsMeleeStance == null ||
+                !WeaponSwitchExitsMeleeStance.Value ||
+                pWeaponCurrentSlot == null ||
+                basicMeleeSlotValue == null ||
+                equipmentManager == null)
+            {
+                ClearStanceAsLastUsed(state);
+                return;
+            }
+
+            object slot = pWeaponCurrentSlot.GetValue(equipmentManager, null);
+
+            if (slot == null || basicMeleeSlotValue.Equals(slot))
+            {
+                ClearStanceAsLastUsed(state);
+                return;
+            }
+
+            state.StanceIsLastUsed = true;
+            state.StanceReturnSlot = slot;
+            state.StanceExitFrame = Time.frameCount;
+        }
+
+        private static void ClearStanceAsLastUsed(ToggleState state)
+        {
+            state.StanceIsLastUsed = false;
+            state.StanceReturnSlot = null;
+        }
+
+        private static bool IsStanceReturnSlotSelected(object equipmentManager, ToggleState state)
+        {
+            if (pWeaponCurrentSlot == null || equipmentManager == null || state.StanceReturnSlot == null)
+                return false;
+
+            return state.StanceReturnSlot.Equals(pWeaponCurrentSlot.GetValue(equipmentManager, null));
+        }
+
+        // The last used weapon key pressed while the stance is off and was the last used item:
+        // enter it through the same ToggleOn path the melee key uses from a weapon. Returns true
+        // when the stance was entered; the caller then skips the game's method.
+        private static bool TryReturnToStance(object equipmentManager)
+        {
+            if (!IsModActive() || equipmentManager == null)
+                return false;
+
+            ToggleState state;
+
+            if (!States.TryGetValue(equipmentManager, out state) || state == null || !state.StanceIsLastUsed)
+                return false;
+
+            if (WeaponSwitchExitsMeleeStance == null || !WeaponSwitchExitsMeleeStance.Value)
+            {
+                ClearStanceAsLastUsed(state);
+                return false;
+            }
+
+            if (state.IsToggled ||
+                state.AttackInProgress ||
+                state.SheatheAfterAttack ||
+                state.CompletingMeleeAttack)
+            {
+                return false;
+            }
+
+            // Only while the game is running its equipment input update.
+            if (Time.time - state.LastEquipmentInputTime > StanceLivenessWindow)
+                return false;
+
+            // Still on the slot the stance exit settled on. A later switch normally clears the flag
+            // already; this also covers a game without the ChangeWeapon postfix.
+            if (!IsStanceReturnSlotSelected(equipmentManager, state))
+            {
+                ClearStanceAsLastUsed(state);
+                return false;
+            }
+
+            if (fEquippedItems != null)
+            {
+                // The item in the remembered slot is gone (no slot is also fine: nothing in hand).
+                if (!state.StanceReturnSlot.Equals(inventorySlotNoneValue) &&
+                    GetEquippedItem(equipmentManager, state.StanceReturnSlot) == null)
+                {
+                    ClearStanceAsLastUsed(state);
+                    return false;
+                }
+
+                // Without a basic melee weapon ChargeBasicMelee refuses, so the key keeps its
+                // normal behavior.
+                if (GetEquippedItem(equipmentManager, basicMeleeSlotValue) == null)
+                    return false;
+            }
+
+            // Leave a held melee key to the melee key handling (tap / hold, or the chord).
+            if (IsMeleeHeld(equipmentManager))
+                return false;
+
+            // Only the player's key press. The game also calls SelectLastUsedWeapon itself when a
+            // throwable runs out, and that must still switch weapons.
+            if (!WasPerformedThisFrame(GetInputAction(fSelectLastUsedAction, equipmentManager)))
+                return false;
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo("Last used weapon key after leaving melee stance. Going back into melee stance.");
+            }
+
+            // ToggleOn clears StanceIsLastUsed.
+            ToggleOn(equipmentManager, state);
+            return true;
         }
 
         private static void SetPendingWeaponSelection(
@@ -1673,6 +1829,7 @@ namespace ToggleMeleeStance
             state.WasMeleeHeldLastFrame = false;
             state.MeleePressStartTime = 0f;
             ClearPendingWeaponSelection(state);
+            ClearStanceAsLastUsed(state);
 
             if (LogStateChanges.Value)
             {
@@ -1721,6 +1878,10 @@ namespace ToggleMeleeStance
 
             CleanCurrentMeleeWeaponState(currentHoldable);
             InvokeOnMeleeDone(equipmentManager);
+
+            // The stance ends here, on the weapon OnMeleeDone restored. A slot key goes on to its
+            // slot in the same frame, and the remembered slot follows it (ChangeWeaponPostfix).
+            RememberStanceAsLastUsed(equipmentManager, state);
         }
 
         private static void MaintainToggledMelee(
@@ -2196,6 +2357,9 @@ namespace ToggleMeleeStance
             SetMeleePressed(equipmentManager, false);
             SetAlternativeMeleePressed(equipmentManager, false);
 
+            // The stance ends on the weapon the other mod switched to.
+            RememberStanceAsLastUsed(equipmentManager, state);
+
             if (LogStateChanges != null && LogStateChanges.Value)
             {
                 Log?.LogInfo(
@@ -2435,6 +2599,13 @@ namespace ToggleMeleeStance
 
             // The MeleeInputMode the tap / hold tracking above belongs to (see HandleMeleeInputPrefix).
             public MeleeKeyMode? AppliedMeleeKeyMode;
+
+            // Set when the stance ended, so the last used weapon key goes back into it (see
+            // RememberStanceAsLastUsed). StanceReturnSlot is the slot the exit settled on, and
+            // StanceExitFrame the Time.frameCount of the exit.
+            public bool StanceIsLastUsed;
+            public object StanceReturnSlot;
+            public int StanceExitFrame;
         }
 
         // Values of the MeleeInputMode config entry. The names are stored in the config file, so

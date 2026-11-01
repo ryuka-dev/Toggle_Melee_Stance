@@ -17,6 +17,7 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
 - While melee stance is toggled on, press a weapon slot key to leave the stance and switch straight to that slot, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
 - While melee stance is toggled on, the last used weapon key and the scroll wheel / d-pad leave the stance and take you back to the weapon you had out before it.
+- However melee stance ends, the last used weapon key then takes you back into it, so pressing it again and again alternates between your weapon and the stance. Switch to another weapon and the key works as usual again.
 - Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.
 - Uses SULFUR's own input actions instead of hardcoded mouse buttons, so it should work with rebinding, controller, and Steam Deck layouts.
 - Keeps the original melee attack, parry, alternative stance, and weapon-specific behavior.
@@ -59,6 +60,10 @@ Weapon slot key
 
 Last used weapon key / scroll wheel / d-pad
 → Leave melee stance and go back to the weapon you had out before it
+
+Last used weapon key, after melee stance has ended
+→ Go back into melee stance
+→ Switching to another weapon first makes the key work as usual again
 ```
 
 The mod does not hardcode `F`, mouse buttons, or controller buttons.
@@ -90,6 +95,7 @@ QuickMeleeChordToggle
 → The melee key works as in the base game: press and release for a quick melee.
 → While holding the melee key, press Fire or the last used weapon key to enter melee stance instead of attacking.
 → Press the melee key or the last used weapon key to leave melee stance.
+→ After leaving, the last used weapon key on its own goes back into melee stance.
 ```
 
 On a gamepad with the default bindings, hold X or LB, then press RT (Fire) or Y (last used weapon).
@@ -216,6 +222,7 @@ true
 → Default.
 → A weapon slot key leaves melee stance and switches to that slot.
 → The last used weapon key and weapon cycling leave melee stance and go back to the weapon you had out before it.
+→ However melee stance ends, the last used weapon key then goes back into it, until you switch to another weapon.
 → A slot chosen during a melee attack is applied when the attack finishes.
 → A consumable in slots 3-5 is used and melee stance stays on.
 → An empty slot is ignored and melee stance stays on.

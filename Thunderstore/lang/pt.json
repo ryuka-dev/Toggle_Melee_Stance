@@ -130,7 +130,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Com a postura de combate ativa, os controles de seleção de arma saem da postura. As teclas de slot de arma (1-5 por padrão) trocam para esse slot. A tecla da última arma usada e a troca de arma com a roda do mouse ou o direcional do controle voltam para a arma que você segurava antes da postura. Um slot escolhido durante um ataque corpo a corpo é selecionado quando o ataque termina. Consumíveis nos slots 3-5 são usados sem sair da postura de combate."
+      "value": "Com a postura de combate ativa, os controles de seleção de arma saem da postura. As teclas de slot de arma (1-5 por padrão) trocam para esse slot. A tecla da última arma usada e a troca de arma com a roda do mouse ou o direcional do controle voltam para a arma que você segurava antes da postura. Não importa como a postura termine, depois a tecla da última arma usada volta para ela, até você trocar para outra arma. Um slot escolhido durante um ataque corpo a corpo é selecionado quando o ataque termina. Consumíveis nos slots 3-5 são usados sem sair da postura de combate."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

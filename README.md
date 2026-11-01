@@ -51,6 +51,13 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   because `lastSelectedSlot` and `slotOrder` both ignore the basic melee slot. A slot key pressed
   during an attack is stored and replayed from `ReportMeleeDonePostfix` once the stance has
   sheathed; the other requests need no replay, since the sheathe restores the pre-stance weapon.
+  The stance also counts as a last used item: every place where it ends (`ToggleOff`, both
+  sheathe completions, the retry-window exit, the external-switch exit) calls
+  `RememberStanceAsLastUsed` with the current slot, and a `ChangeWeapon` in the same frame (a slot
+  key, a replayed selection) moves that slot along. `SelectLastUsedWeaponPrefix` then re-enters the
+  stance through `ToggleOn` (`TryReturnToStance`) while the player is still on that slot. Any later
+  switch to another slot clears it in `ChangeWeaponPostfix`, after which the game's own
+  `lastSelectedSlot` applies again.
   A keyboard consumable in a gadget slot is used through `InventoryItem.Use(true)` without
   leaving the stance, mirroring the check `ChangeWeapon` makes before it uses one. Each entry
   point is patched only when its signature matches (`ChangeWeapon(InventorySlot, bool forced,
