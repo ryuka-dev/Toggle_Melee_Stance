@@ -15,7 +15,8 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - Optionally swap the tap and hold actions, so tap performs the quick melee and hold toggles the stance.
 - While melee stance is toggled on, press the normal Fire action to perform one melee attack.
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
-- While melee stance is toggled on, select a weapon (slot keys, scroll wheel / d-pad, or the last used weapon key) to leave the stance and switch straight to it, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
+- While melee stance is toggled on, press a weapon slot key to leave the stance and switch straight to that slot, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
+- While melee stance is toggled on, the last used weapon key and the scroll wheel / d-pad leave the stance and take you back to the weapon you had out before it.
 - Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.
 - Uses SULFUR's own input actions instead of hardcoded mouse buttons, so it should work with rebinding, controller, and Steam Deck layouts.
 - Keeps the original melee attack, parry, alternative stance, and weapon-specific behavior.
@@ -49,10 +50,13 @@ Fire
 Aim / Alt Fire
 → Keep vanilla alternative melee stance / block behavior
 
-Weapon slot key / scroll wheel / d-pad / last used weapon key
-→ Leave melee stance and switch to the selected weapon
+Weapon slot key
+→ Leave melee stance and switch to that slot
 → During a melee attack, the switch happens when the attack finishes
 → A consumable in slots 3-5 is used and melee stance stays on
+
+Last used weapon key / scroll wheel / d-pad
+→ Leave melee stance and go back to the weapon you had out before it
 ```
 
 The mod does not hardcode `F`, mouse buttons, or controller buttons.
@@ -176,8 +180,9 @@ Controls what happens when you select a weapon while melee stance is toggled on.
 ```text
 true
 → Default.
-→ Selecting a weapon leaves melee stance and switches to that weapon.
-→ A selection made during a melee attack is applied when the attack finishes.
+→ A weapon slot key leaves melee stance and switches to that slot.
+→ The last used weapon key and weapon cycling leave melee stance and go back to the weapon you had out before it.
+→ A slot chosen during a melee attack is applied when the attack finishes.
 → A consumable in slots 3-5 is used and melee stance stays on.
 → An empty slot is ignored and melee stance stays on.
 

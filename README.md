@@ -45,8 +45,12 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   `PreviousWeapon` return early while the basic melee slot is selected. Prefixes on
   `ChangeWeapon` (slot keys only, recognised by `navigatedDirectlyTo`), `NextWeapon`,
   `PreviousWeapon` (only without a starting slot) and `SelectLastUsedWeapon` end the stance
-  through `ToggleOff` and let the original method perform the switch. A selection made during
-  an attack is stored and replayed from `ReportMeleeDonePostfix` once the stance has sheathed.
+  through `ToggleOff`. A slot key then lets the original method perform the switch. The other
+  three skip the original (bool prefix) once the stance has left the melee slot: `OnMeleeDone`
+  has already restored the pre-stance weapon, and the original would move one weapon further,
+  because `lastSelectedSlot` and `slotOrder` both ignore the basic melee slot. A slot key pressed
+  during an attack is stored and replayed from `ReportMeleeDonePostfix` once the stance has
+  sheathed; the other requests need no replay, since the sheathe restores the pre-stance weapon.
   A keyboard consumable in a gadget slot is used through `InventoryItem.Use(true)` without
   leaving the stance, mirroring the check `ChangeWeapon` makes before it uses one. Each entry
   point is patched only when its signature matches (`ChangeWeapon(InventorySlot, bool forced,

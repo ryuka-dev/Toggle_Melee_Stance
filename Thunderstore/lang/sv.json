@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "När närstridsställningen är på avslutar ett vapenval ställningen och byter till det vapnet: vapenplatstangenterna (1-5 som standard), vapenbyte med mushjulet eller handkontrollens styrkors och tangenten för senast använda vapen. Ett val som görs under en närstridsattack utförs när attacken är klar. Förbrukningsföremål på plats 3-5 används utan att närstridsställningen avslutas."
+      "value": "När närstridsställningen är på avslutar vapenvalet ställningen. Vapenplatstangenterna (1-5 som standard) byter till den platsen. Tangenten för senast använda vapen och vapenbyte med mushjulet eller handkontrollens styrkors går tillbaka till vapnet du höll innan ställningen. En plats som väljs under en närstridsattack väljs när attacken är klar. Förbrukningsföremål på plats 3-5 används utan att närstridsställningen avslutas."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

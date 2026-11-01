@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "When melee stance is on, selecting a weapon leaves the stance and switches to it: the weapon slot keys (1-5 by default), weapon cycling with the scroll wheel or gamepad d-pad, and the last used weapon key. A selection made during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
+      "value": "When melee stance is on, the weapon selection controls leave it. The weapon slot keys (1-5 by default) switch to that slot. The last used weapon key and weapon cycling with the scroll wheel or gamepad d-pad return to the weapon you held before the stance. A slot chosen during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

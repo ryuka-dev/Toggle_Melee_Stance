@@ -185,7 +185,7 @@ namespace ToggleMeleeStance
                 "Melee",
                 "WeaponSwitchExitsMeleeStance",
                 true,
-                "When melee stance is on, selecting a weapon leaves the stance and switches to it: the weapon slot keys (1-5 by default), weapon cycling with the scroll wheel or gamepad d-pad, and the last used weapon key. A selection made during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
+                "When melee stance is on, the weapon selection controls leave it. The weapon slot keys (1-5 by default) switch to that slot. The last used weapon key and weapon cycling with the scroll wheel or gamepad d-pad return to the weapon you held before the stance. A slot chosen during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
             );
 
             LogStateChanges = Config.Bind(
@@ -1125,37 +1125,47 @@ namespace ToggleMeleeStance
             if (forced || !navigatedDirectlyTo || __args == null || __args.Length == 0)
                 return;
 
+            // A slot key never skips the game's method: it performs the switch to the chosen slot.
             HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Slot, __args[0], "slot key");
         }
 
         // Weapon cycling (scroll wheel, gamepad d-pad). NextWeapon and PreviousWeapon do nothing
-        // while the basic melee slot is selected.
-        private static void NextWeaponPrefix(object __instance)
+        // while the basic melee slot is selected. When the stance ends here the game's method is
+        // skipped (see HandleWeaponSelectionRequest).
+        private static bool NextWeaponPrefix(object __instance)
         {
-            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Next, null, "next weapon");
+            return !HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Next, null, "next weapon");
         }
 
-        private static void PreviousWeaponPrefix(object __instance, object[] __args)
+        private static bool PreviousWeaponPrefix(object __instance, object[] __args)
         {
             // The input path calls PreviousWeapon without a starting slot; using up the last
             // consumable of a gadget slot passes that slot instead.
             if (__args == null || __args.Length == 0 || !inventorySlotNoneValue.Equals(__args[0]))
-                return;
+                return true;
 
-            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Previous, null, "previous weapon");
+            return !HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Previous, null, "previous weapon");
         }
 
-        // The last used weapon key (LastUsedSlot). Once the stance has ended the game resolves
-        // the target from the restored weapon exactly as it does outside the stance.
-        private static void SelectLastUsedWeaponPrefix(object __instance)
+        // The last used weapon key (LastUsedSlot). When the stance ends here the game's method is
+        // skipped (see HandleWeaponSelectionRequest).
+        private static bool SelectLastUsedWeaponPrefix(object __instance)
         {
-            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.LastUsed, null, "last used weapon");
+            return !HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.LastUsed, null, "last used weapon");
         }
 
         // Shared handling for a weapon selection made while the stance is on. It changes only the
-        // stance state (through ToggleOff when the game must end its melee charge); the game's own
-        // selection method always runs afterwards and performs the switch with its usual checks.
-        private static void HandleWeaponSelectionRequest(
+        // stance state (through ToggleOff when the game must end its melee charge). Returns true
+        // when the game's own selection method must be skipped.
+        //
+        // The stance stands in for the weapon that was out before it. The last used weapon key and
+        // weapon cycling therefore only end the stance and stay on that weapon, the same way the
+        // game returns to it after a quick melee, and the way the last used weapon key returns from
+        // the amulet. The game's method would otherwise run from the restored weapon and move one
+        // weapon further, because lastSelectedSlot and the cycling order ignore the basic melee
+        // slot. A slot key ends the stance and lets the game's method switch to the chosen slot
+        // with its usual checks.
+        private static bool HandleWeaponSelectionRequest(
             object equipmentManager,
             WeaponSelectionRequest request,
             object slot,
@@ -1167,61 +1177,78 @@ namespace ToggleMeleeStance
                 !WeaponSwitchExitsMeleeStance.Value ||
                 equipmentManager == null)
             {
-                return;
+                return false;
             }
 
             ToggleState state;
 
             if (!States.TryGetValue(equipmentManager, out state) || state == null)
-                return;
+                return false;
 
             // The game's own attack completion is changing weapons; ReportMeleeDonePostfix owns it.
             if (state.CompletingMeleeAttack)
-                return;
+                return false;
 
             // A sheathe is already pending for the current attack (melee key or an earlier selection).
             bool sheathePending = !state.IsToggled && state.SheatheAfterAttack && state.AttackInProgress;
 
             if (!state.IsToggled && !sheathePending)
-                return;
+                return false;
 
             // Only while the game is running its equipment input update. Slot callbacks keep firing
             // in states where it is halted (flashback, straitjacket status); those keep vanilla behavior.
             if (Time.time - state.LastEquipmentInputTime > StanceLivenessWindow)
-                return;
+                return false;
+
+            // The last used weapon key and weapon cycling return to the weapon from before the stance.
+            bool returnsToStanceWeapon = request != WeaponSelectionRequest.Slot;
 
             if (request == WeaponSelectionRequest.Slot)
             {
                 if (IsDirectConsumableUse(equipmentManager, slot))
                 {
                     UseConsumableInStance(equipmentManager, slot);
-                    return;
+                    return false;
                 }
 
                 // An empty slot is ignored by the game, so the stance stays.
                 if (!IsSlotSelectableByChangeWeapon(equipmentManager, slot))
-                    return;
+                    return false;
             }
 
             if (!IsBasicMeleeSlotSelected(equipmentManager))
             {
+                // Between melee charges the weapon from before the stance is the one drawn.
                 ExitStanceWithoutMeleeWeapon(equipmentManager, state, source);
-                return;
+                return returnsToStanceWeapon;
             }
 
             if (sheathePending)
             {
+                if (returnsToStanceWeapon)
+                {
+                    // The pending sheathe already returns to the weapon from before the stance.
+                    // This also replaces a slot selection made earlier in the same attack.
+                    ClearPendingWeaponSelection(state);
+                    return true;
+                }
+
                 SetPendingWeaponSelection(state, request, slot, source);
-                return;
+                return false;
             }
 
             if (state.AttackInProgress)
             {
                 // ToggleOff only marks the stance to sheathe once the attack finishes; the game
-                // still refuses the switch now, so it is performed after the attack.
+                // still refuses the switch now, so a slot selection is performed after the attack.
+                // The sheathe itself returns to the weapon from before the stance.
                 ToggleOff(equipmentManager, state);
+
+                if (returnsToStanceWeapon)
+                    return true;
+
                 SetPendingWeaponSelection(state, request, slot, source);
-                return;
+                return false;
             }
 
             // The melee weapon has been selected but ChargeBasicMeleeRoutine has not started its
@@ -1229,16 +1256,22 @@ namespace ToggleMeleeStance
             // weapon the game switches back to, so the selection is ignored like any switch
             // during a draw.
             if (!IsInMeleeCharge(equipmentManager))
-                return;
+                return false;
 
             if (LogStateChanges != null && LogStateChanges.Value)
             {
-                Log?.LogInfo("Weapon selected in melee stance (" + source + "). Leaving melee stance. slot=" + slot);
+                Log?.LogInfo(
+                    "Weapon selected in melee stance (" + source + "). Leaving melee stance" +
+                    (returnsToStanceWeapon ? " and returning to the weapon from before it." : ". slot=" + slot)
+                );
             }
 
             // OnMeleeDone (through ToggleOff) clears weaponSwitchingPrevented and restores the
-            // cached weapon; the game's selection then continues from there.
+            // cached weapon; a slot selection then continues from there in the game's method.
             ToggleOff(equipmentManager, state);
+
+            // Skip the game's method only when the stance actually left the melee slot.
+            return returnsToStanceWeapon && !IsBasicMeleeSlotSelected(equipmentManager);
         }
 
         // Mirrors the check ChangeWeapon makes before using a consumable from a slot key: the slot
@@ -1381,11 +1414,13 @@ namespace ToggleMeleeStance
             state.PendingWeaponSelectionSlot = null;
         }
 
-        // Performs the selection recorded during the attack through the same game method the
-        // player's input used, so it goes through the game's normal checks. The request is cleared
-        // first, whether or not the call succeeds. A selection recorded for an attack that ended
-        // through a forced weapon change (AbandonInterruptedMeleeAttack) is not performed: the game
-        // has already chosen the weapon, and the request is cleared on the next ToggleOn.
+        // Performs the slot selection recorded during the attack through the same game method the
+        // slot key used, so it goes through the game's normal checks. Only slot keys are recorded:
+        // the sheathe itself already returns to the weapon the last used weapon key and weapon
+        // cycling ask for. The request is cleared first, whether or not the call succeeds. A
+        // selection recorded for an attack that ended through a forced weapon change
+        // (AbandonInterruptedMeleeAttack) is not performed: the game has already chosen the weapon,
+        // and the request is cleared on the next ToggleOn.
         private static void ReplayPendingWeaponSelection(object equipmentManager, ToggleState state)
         {
             WeaponSelectionRequest request = state.PendingWeaponSelection;
@@ -1393,7 +1428,7 @@ namespace ToggleMeleeStance
 
             ClearPendingWeaponSelection(state);
 
-            if (request == WeaponSelectionRequest.None)
+            if (request != WeaponSelectionRequest.Slot)
                 return;
 
             // The option may have been turned off while the attack was finishing.
@@ -1402,29 +1437,12 @@ namespace ToggleMeleeStance
 
             if (LogStateChanges != null && LogStateChanges.Value)
             {
-                Log?.LogInfo("Applying the weapon selection made during the melee attack: " + request + " slot=" + slot);
+                Log?.LogInfo("Applying the weapon selection made during the melee attack: slot=" + slot);
             }
 
             try
             {
-                switch (request)
-                {
-                    case WeaponSelectionRequest.Slot:
-                        mChangeWeapon.Invoke(equipmentManager, new object[] { slot, false, true });
-                        break;
-
-                    case WeaponSelectionRequest.Next:
-                        mNextWeapon.Invoke(equipmentManager, null);
-                        break;
-
-                    case WeaponSelectionRequest.Previous:
-                        mPreviousWeapon.Invoke(equipmentManager, new object[] { inventorySlotNoneValue });
-                        break;
-
-                    case WeaponSelectionRequest.LastUsed:
-                        mSelectLastUsedWeapon.Invoke(equipmentManager, null);
-                        break;
-                }
+                mChangeWeapon.Invoke(equipmentManager, new object[] { slot, false, true });
             }
             catch (Exception ex)
             {

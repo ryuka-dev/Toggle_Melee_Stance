@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Gdy postawa walki wręcz jest włączona, wybranie broni kończy postawę i przełącza na tę broń: klawisze slotów broni (domyślnie 1-5), przełączanie broni kółkiem myszy lub krzyżakiem pada oraz klawisz ostatnio używanej broni. Wybór dokonany podczas ataku wręcz zostanie wykonany po zakończeniu ataku. Przedmioty zużywalne w slotach 3-5 są używane bez wychodzenia z postawy walki wręcz."
+      "value": "Gdy postawa walki wręcz jest włączona, sterowanie wyborem broni kończy postawę. Klawisze slotów broni (domyślnie 1-5) przełączają na dany slot. Klawisz ostatnio używanej broni oraz przełączanie broni kółkiem myszy lub krzyżakiem pada wracają do broni trzymanej przed postawą. Slot wybrany podczas ataku wręcz zostanie wybrany po zakończeniu ataku. Przedmioty zużywalne w slotach 3-5 są używane bez wychodzenia z postawy walki wręcz."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

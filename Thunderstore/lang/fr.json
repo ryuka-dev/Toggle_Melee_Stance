@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Lorsque la posture de mêlée est active, sélectionner une arme quitte la posture et équipe cette arme : touches d'emplacement d'arme (1-5 par défaut), changement d'arme avec la molette de la souris ou la croix directionnelle de la manette, et touche de la dernière arme utilisée. Une sélection faite pendant une attaque de mêlée est appliquée à la fin de l'attaque. Les consommables des emplacements 3-5 sont utilisés sans quitter la posture de mêlée."
+      "value": "Lorsque la posture de mêlée est active, les commandes de sélection d'arme la quittent. Les touches d'emplacement d'arme (1-5 par défaut) équipent cet emplacement. La touche de la dernière arme utilisée et le changement d'arme avec la molette de la souris ou la croix directionnelle de la manette reviennent à l'arme tenue avant la posture. Un emplacement choisi pendant une attaque de mêlée est équipé à la fin de l'attaque. Les consommables des emplacements 3-5 sont utilisés sans quitter la posture de mêlée."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

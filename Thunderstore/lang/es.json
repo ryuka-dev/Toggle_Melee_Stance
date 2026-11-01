@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Con la postura de combate activa, seleccionar un arma sale de la postura y cambia a esa arma: teclas de ranura de arma (1-5 por defecto), cambio de arma con la rueda del ratón o la cruceta del mando, y la tecla de última arma usada. Si eliges un arma durante un ataque cuerpo a cuerpo, el cambio se hace al terminar el ataque. Los consumibles de las ranuras 3-5 se usan sin salir de la postura de combate."
+      "value": "Con la postura de combate activa, los controles de selección de arma salen de la postura. Las teclas de ranura de arma (1-5 por defecto) cambian a esa ranura. La tecla de última arma usada y el cambio de arma con la rueda del ratón o la cruceta del mando vuelven al arma que llevabas antes de la postura. Si eliges una ranura durante un ataque cuerpo a cuerpo, el cambio se hace al terminar el ataque. Los consumibles de las ranuras 3-5 se usan sin salir de la postura de combate."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

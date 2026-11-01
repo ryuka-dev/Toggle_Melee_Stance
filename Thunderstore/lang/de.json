@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Wenn die Nahkampfhaltung aktiv ist, beendet die Auswahl einer Waffe die Haltung und wechselt zu dieser Waffe: Waffenplatz-Tasten (standardmäßig 1-5), Waffenwechsel per Mausrad oder Gamepad-Steuerkreuz und die Taste für die zuletzt benutzte Waffe. Eine Auswahl während eines Nahkampfangriffs wird ausgeführt, sobald der Angriff endet. Verbrauchsgegenstände in den Plätzen 3-5 werden benutzt, ohne die Nahkampfhaltung zu verlassen."
+      "value": "Wenn die Nahkampfhaltung aktiv ist, beendet die Waffenauswahl die Haltung. Die Waffenplatz-Tasten (standardmäßig 1-5) wechseln zu diesem Platz. Die Taste für die zuletzt benutzte Waffe und der Waffenwechsel per Mausrad oder Gamepad-Steuerkreuz kehren zu der Waffe zurück, die du vor der Haltung in der Hand hattest. Ein während eines Nahkampfangriffs gewählter Platz wird ausgewählt, sobald der Angriff endet. Verbrauchsgegenstände in den Plätzen 3-5 werden benutzt, ohne die Nahkampfhaltung zu verlassen."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",

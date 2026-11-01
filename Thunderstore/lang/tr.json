@@ -106,7 +106,7 @@
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
-      "value": "Yakın dövüş duruşu açıkken bir silah seçmek duruştan çıkarır ve o silaha geçer: silah yuvası tuşları (varsayılan 1-5), fare tekerleği veya oyun kumandasının yön tuşlarıyla silah değiştirme ve son kullanılan silah tuşu. Yakın dövüş saldırısı sırasında yapılan seçim, saldırı bitince uygulanır. 3-5 numaralı yuvalardaki tüketilebilir eşyalar yakın dövüş duruşundan çıkmadan kullanılır."
+      "value": "Yakın dövüş duruşu açıkken silah seçme kontrolleri duruştan çıkarır. Silah yuvası tuşları (varsayılan 1-5) o yuvaya geçer. Son kullanılan silah tuşu ve fare tekerleği veya oyun kumandasının yön tuşlarıyla silah değiştirme, duruştan önce elinde tuttuğun silaha döner. Yakın dövüş saldırısı sırasında seçilen yuva, saldırı bitince seçilir. 3-5 numaralı yuvalardaki tüketilebilir eşyalar yakın dövüş duruşundan çıkmadan kullanılır."
     },
     {
       "key": "entry.Debug.LogStateChanges.name",
