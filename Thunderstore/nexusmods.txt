@@ -11,12 +11,14 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 [list]
 [*]Press the game's melee action once to keep your melee weapon drawn.[/*]
 [*]Press the melee action again to sheathe it and return to your previous weapon.[/*]
-[*]Tap the melee key to toggle melee stance.[/*]
-[*]Hold the melee key to use the original melee behavior.[/*]
-[*]Optionally swap the tap and hold actions, so tap performs the quick melee and hold toggles the stance.[/*]
+[*]By default, tap the melee key to toggle melee stance.[/*]
+[*]By default, hold the melee key to use the original melee behavior.[/*]
+[*]Pick another melee input mode if you prefer: swap tap and hold, toggle on every press, or keep the melee key exactly as in the base game and enter the stance by holding it and pressing Fire.[/*]
 [*]While melee stance is toggled on, press the normal Fire action to perform one melee attack.[/*]
 [*]While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.[/*]
-[*]While melee stance is toggled on, select a weapon (slot keys, scroll wheel / d-pad, or the last used weapon key) to leave the stance and switch straight to it, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.[/*]
+[*]While melee stance is toggled on, press a weapon slot key to leave the stance and switch straight to that slot, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.[/*]
+[*]While melee stance is toggled on, the last used weapon key and the scroll wheel / d-pad leave the stance and take you back to the weapon you had out before it.[/*]
+[*]However melee stance ends, the last used weapon key then takes you back into it, so pressing it again and again alternates between your weapon and the stance. Switch to another weapon and the key works as usual again.[/*]
 [*]Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.[/*]
 [*]Uses SULFUR's own input actions instead of hardcoded mouse buttons, so it should work with rebinding, controller, and Steam Deck layouts.[/*]
 [*]Keeps the original melee attack, parry, alternative stance, and weapon-specific behavior.[/*]
@@ -36,6 +38,8 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 [/list]
 [color=RoyalBlue][b]Basic Controls[/b][/color]
 
+With the default melee input mode ([color=#ffff00]TapToggleHoldQuickMelee[/color]):
+
 [code]Tap Melee key
 → Toggle melee stance on / off
 
@@ -50,13 +54,48 @@ Fire
 Aim / Alt Fire
 → Keep vanilla alternative melee stance / block behavior
 
-Weapon slot key / scroll wheel / d-pad / last used weapon key
-→ Leave melee stance and switch to the selected weapon
+Weapon slot key
+→ Leave melee stance and switch to that slot
 → During a melee attack, the switch happens when the attack finishes
-→ A consumable in slots 3-5 is used and melee stance stays on[/code]
+→ A consumable in slots 3-5 is used and melee stance stays on
+
+Last used weapon key / scroll wheel / d-pad
+→ Leave melee stance and go back to the weapon you had out before it
+
+Last used weapon key, after melee stance has ended
+→ Go back into melee stance
+→ Switching to another weapon first makes the key work as usual again[/code]
 The mod does not hardcode [color=#ffff00]F[/color], mouse buttons, or controller buttons.
 
 It uses the game's own input actions, so it should respect key rebinding and controller input better than raw key checks.
+
+[color=DodgerBlue][b]Melee input mode[/b][/color]
+
+[color=#ffff00]MeleeInputMode[/color] in the [color=#ffff00][Melee][/color] section sets how the melee key works. If telling a tap from a hold feels finicky, try [color=#ffff00]QuickMeleeChordToggle[/color]: it has no timing at all.
+
+[code][Melee]
+# TapToggleHoldQuickMelee, TapQuickMeleeHoldToggle, PressToggles or QuickMeleeChordToggle
+MeleeInputMode = TapToggleHoldQuickMelee[/code]
+[code]TapToggleHoldQuickMelee
+→ Default.
+→ Tap to toggle melee stance, hold for the original quick melee.
+
+TapQuickMeleeHoldToggle
+→ Tap for the original quick melee, hold to toggle melee stance.
+
+PressToggles
+→ Every press toggles melee stance. There is no quick melee.
+
+QuickMeleeChordToggle
+→ The melee key works as in the base game: press and release for a quick melee.
+→ While holding the melee key, press Fire or the last used weapon key to enter melee stance instead of attacking.
+→ Press the melee key or the last used weapon key to leave melee stance.
+→ After leaving, the last used weapon key on its own goes back into melee stance.[/code]
+On a gamepad with the default bindings, hold X or LB, then press RT (Fire) or Y (last used weapon).
+
+The two tap modes use [color=#ffff00]MeleeToggleTapThreshold[/color] to tell a tap from a hold. With SULFUR Config installed, the option is listed as Melee Input Mode, with a short label for each value.
+
+Older configs that set [color=#ffff00]EnableTapHoldMeleeKey = false[/color] or [color=#ffff00]SwapQuickMeleeAndEquipMelee = true[/color] are carried over to the matching mode on the first start, as long as [color=#ffff00]MeleeInputMode[/color] is still at its default.
 
 [color=RoyalBlue][b]Shared Module Behavior[/b][/color]
 
@@ -95,6 +134,8 @@ EnableMod = true
 [Melee]
 FirePerformsMeleeAttack = true
 ReChargeRetryInterval = 0.08
+MeleeInputMode = TapToggleHoldQuickMelee
+# Deprecated, read once for migration
 EnableTapHoldMeleeKey = true
 SwapQuickMeleeAndEquipMelee = false
 MeleeToggleTapThreshold = 0.13
@@ -123,25 +164,25 @@ When enabled, pressing the normal Fire action while melee is toggled on performs
 
 Controls how often the mod retries re-entering melee stance after the game clears the melee charge state.
 
+[color=#ffff00]MeleeInputMode[/color]
+
+Sets how the melee key works. See Melee input mode above.
+
 [color=#ffff00]EnableTapHoldMeleeKey[/color]
 
-When enabled, tapping the melee key toggles melee stance, while holding the melee key passes through to the original melee behavior.
+Deprecated, read once for migration. Replaced by [color=#ffff00]MeleeInputMode[/color].
+
+If this is [color=#ffff00]false[/color] while [color=#ffff00]MeleeInputMode[/color] is at its default, the next start sets [color=#ffff00]MeleeInputMode = PressToggles[/color] and resets this entry to [color=#ffff00]true[/color].
 
 [color=#ffff00]SwapQuickMeleeAndEquipMelee[/color]
 
-Requires [color=#ffff00]EnableTapHoldMeleeKey[/color]. Swaps which action is tap and which is hold.
+Deprecated, read once for migration. Replaced by [color=#ffff00]MeleeInputMode[/color].
 
-[code]false
-→ Default.
-→ Tap the melee key to toggle melee stance.
-→ Hold the melee key to perform the original quick melee attack.
+If this is [color=#ffff00]true[/color] while [color=#ffff00]MeleeInputMode[/color] is at its default and [color=#ffff00]EnableTapHoldMeleeKey[/color] is [color=#ffff00]true[/color], the next start sets [color=#ffff00]MeleeInputMode = TapQuickMeleeHoldToggle[/color] and resets this entry to [color=#ffff00]false[/color].
 
-true
-→ Tap the melee key to perform the original quick melee attack.
-→ Hold the melee key to toggle melee stance.[/code]
 [color=#ffff00]MeleeToggleTapThreshold[/color]
 
-Maximum press duration treated as a tap.
+Maximum press duration treated as a tap. Used only by the two tap modes, [color=#ffff00]TapToggleHoldQuickMelee[/color] and [color=#ffff00]TapQuickMeleeHoldToggle[/color].
 
 Default:
 
@@ -156,8 +197,10 @@ Controls what happens when you select a weapon while melee stance is toggled on.
 
 [code]true
 → Default.
-→ Selecting a weapon leaves melee stance and switches to that weapon.
-→ A selection made during a melee attack is applied when the attack finishes.
+→ A weapon slot key leaves melee stance and switches to that slot.
+→ The last used weapon key and weapon cycling leave melee stance and go back to the weapon you had out before it.
+→ However melee stance ends, the last used weapon key then goes back into it, until you switch to another weapon.
+→ A slot chosen during a melee attack is applied when the attack finishes.
 → A consumable in slots 3-5 is used and melee stance stays on.
 → An empty slot is ignored and melee stance stays on.
 
@@ -261,6 +304,14 @@ Supported SULFUR Config languages:
 [/list]
 [font=Arial Black][color=DarkOrange][size=5][b]Changelog[/b][/size][/color][/font]
 
+[color=RoyalBlue][b]1.6.0[/b][/color]
+
+[list]
+[*]New [color=#ffff00]MeleeInputMode[/color] setting. If telling a tap from a hold feels finicky, try [color=#ffff00]QuickMeleeChordToggle[/color]: the melee key always does the vanilla quick melee, and holding it while pressing Fire or the last used weapon key enters melee stance, so there's no timing to get right. Thanks to the player who suggested it on GitHub.[/*]
+[*]The last used weapon key now treats melee stance like a weapon. However you leave the stance, pressing it takes you back in, so pressing it repeatedly switches between your weapon and the stance.[/*]
+[*]Fixed the last used weapon key and the scroll wheel leaving melee stance onto the wrong weapon. They now return to the weapon you had out before the stance.[/*]
+[*][color=#ffff00]EnableTapHoldMeleeKey[/color] and [color=#ffff00]SwapQuickMeleeAndEquipMelee[/color] are replaced by [color=#ffff00]MeleeInputMode[/color]. Your old setting is carried over on the first start.[/*]
+[/list]
 [color=RoyalBlue][b]1.5.0[/b][/color]
 
 [list]

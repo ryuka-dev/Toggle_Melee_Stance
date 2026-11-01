@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+- New `MeleeInputMode` setting. If telling a tap from a hold feels finicky, try `QuickMeleeChordToggle`: the melee key always does the vanilla quick melee, and holding it while pressing Fire or the last used weapon key enters melee stance, so there's no timing to get right. Thanks to the player who suggested it on GitHub.
+- The last used weapon key now treats melee stance like a weapon. However you leave the stance, pressing it takes you back in, so pressing it repeatedly switches between your weapon and the stance.
+- Fixed the last used weapon key and the scroll wheel leaving melee stance onto the wrong weapon. They now return to the weapon you had out before the stance.
+- `EnableTapHoldMeleeKey` and `SwapQuickMeleeAndEquipMelee` are replaced by `MeleeInputMode`. Your old setting is carried over on the first start.
+
 ## 1.5.0
 
 - Selecting a weapon now leaves melee stance and switches straight to it, so you no longer have to press the melee key first. This works with the weapon slot keys (1-5), the scroll wheel or gamepad d-pad, and the last used weapon key. If you pick a weapon in the middle of a swing, the switch happens when the swing ends. Consumables in slots 3-5 are used without leaving the stance. Set `WeaponSwitchExitsMeleeStance` to false to keep the old behavior.
