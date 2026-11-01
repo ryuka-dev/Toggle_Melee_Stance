@@ -19,7 +19,7 @@ namespace ToggleMeleeStance
     {
         public const string PluginGuid = "kumo.sulfur.toggle_melee_stance";
         public const string PluginName = "Toggle Melee Stance";
-        public const string PluginVersion = "1.4.0";
+        public const string PluginVersion = "1.5.0";
 
         public const string MeleeExpansionGuid = "kumo.sulfur.melee_expansion";
 

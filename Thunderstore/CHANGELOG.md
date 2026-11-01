@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+- Selecting a weapon now leaves melee stance and switches straight to it, so you no longer have to press the melee key first. This works with the weapon slot keys (1-5), the scroll wheel or gamepad d-pad, and the last used weapon key. If you pick a weapon in the middle of a swing, the switch happens when the swing ends. Consumables in slots 3-5 are used without leaving the stance. Set `WeaponSwitchExitsMeleeStance` to false to keep the old behavior.
+- Fixed the fire button getting stuck after an Endless mode level-up. If the card selection opened during a stance attack (picking a card with Fire starts one), the stance didn't come back, and after leaving it automatic weapons kept firing on their own while other weapons couldn't fire.
+- Holding Fire while entering melee stance no longer leaves the gun's trigger held after you leave the stance.
+- Verified on SULFUR 1.0.2.
+
 ## 1.4.0
 
 - Added `SwapQuickMeleeAndEquipMelee` option. When enabled (and tap/hold input is on), tap the melee key to perform the original quick melee attack and hold the melee key to toggle melee stance. Default keeps the existing mapping: tap toggles stance, hold performs the quick melee attack.
