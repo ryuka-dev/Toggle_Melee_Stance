@@ -61,6 +61,10 @@ namespace ToggleMeleeStance
         private static MethodInfo mChargeMelee;
         private static MethodInfo mSetAlternativeState;
         private static MethodInfo mCanInteract;
+        private static MethodInfo mChangeWeapon;
+
+        private static PropertyInfo pWeaponCurrentSlot;
+        private static object basicMeleeSlotValue;
 
         private static PropertyInfo pIsMelee;
         private static PropertyInfo pAnimator;
@@ -200,6 +204,24 @@ namespace ToggleMeleeStance
                 );
             }
 
+            // Optional: notice when the game itself moves the equipment off the basic melee slot
+            // (for example the Endless mode card selection, or any other forced weapon change)
+            // while a toggled melee attack is still waiting for its completion event. Without
+            // this hook the attack state is only cleared by that event, which cannot arrive once
+            // the melee weapon has been put away.
+            if (mChangeWeapon != null && pWeaponCurrentSlot != null && basicMeleeSlotValue != null)
+            {
+                Patch(mChangeWeapon, postfix: nameof(ChangeWeaponPostfix));
+            }
+            else
+            {
+                Logger.LogWarning(
+                    "Melee slot exit tracking disabled: could not resolve " +
+                    "EquipmentManager.ChangeWeapon or EquipmentManager.weaponCurrentSlot. " +
+                    "A melee attack interrupted by a forced weapon change may leave the stance state stale."
+                );
+            }
+
             Logger.LogInfo("Toggle Melee Stance loaded.");
         }
 
@@ -328,15 +350,33 @@ namespace ToggleMeleeStance
                 pGameManagerEquipmentManager = FindPropertyRecursive(gameManagerType, "EquipmentManager");
             }
 
+            // Optional members for tracking the equipment leaving the basic melee slot. The
+            // postfix binds only __instance, so the patch does not depend on ChangeWeapon's
+            // parameter list (1.0 appended a navigatedDirectlyTo parameter).
+            mChangeWeapon = AccessTools.Method(equipmentManagerType, "ChangeWeapon");
+            pWeaponCurrentSlot = FindPropertyRecursive(equipmentManagerType, "weaponCurrentSlot");
+
+            if (pWeaponCurrentSlot != null && pWeaponCurrentSlot.PropertyType.IsEnum)
+            {
+                try
+                {
+                    basicMeleeSlotValue = Enum.Parse(pWeaponCurrentSlot.PropertyType, "BasicMelee");
+                }
+                catch (ArgumentException)
+                {
+                    basicMeleeSlotValue = null;
+                }
+            }
+
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
                    Require(mPullTrigger, "EquipmentManager.PullTrigger()") &&
                    Require(mReleaseTrigger, "EquipmentManager.ReleaseTrigger()") &&
-                   Require(mChargeBasicMelee, "EquipmentManager.ChargeBasicMelee()") &&
-                   Require(mUseBasicMelee, "EquipmentManager.UseBasicMelee()") &&
-                   Require(mOnMeleeDone, "EquipmentManager.OnMeleeDone()") &&
+                   RequireArity(mChargeBasicMelee, 0, "EquipmentManager.ChargeBasicMelee()") &&
+                   RequireArity(mUseBasicMelee, 0, "EquipmentManager.UseBasicMelee()") &&
+                   RequireArity(mOnMeleeDone, 0, "EquipmentManager.OnMeleeDone()") &&
                    Require(mReportMeleeDone, "Weapon.ReportMeleeDone()") &&
-                   Require(mIsMeleeCharging, "Weapon.IsMeleeCharging()") &&
+                   RequireArity(mIsMeleeCharging, 0, "Weapon.IsMeleeCharging()") &&
                    Require(mChargeMelee, "Weapon.ChargeMelee(bool)") &&
                    Require(mSetAlternativeState, "Weapon.SetAlternativeState(int)") &&
                    Require(pIsMelee, "Weapon.IsMelee") &&
@@ -359,6 +399,27 @@ namespace ToggleMeleeStance
                 return true;
 
             Log?.LogError("Missing required member: " + name);
+            return false;
+        }
+
+        // For methods that are looked up by name and then invoked with a fixed argument list:
+        // a trailing optional parameter added by a game update still resolves by name, but
+        // MethodInfo.Invoke would then throw TargetParameterCountException on every call.
+        private static bool RequireArity(MethodInfo method, int parameterCount, string name)
+        {
+            if (!Require(method, name))
+                return false;
+
+            int actual = method.GetParameters().Length;
+
+            if (actual == parameterCount)
+                return true;
+
+            Log?.LogError(
+                "Incompatible signature for required member: " + name +
+                " (expected " + parameterCount + " parameter(s), the game method has " +
+                actual + ")"
+            );
             return false;
         }
 
@@ -670,6 +731,15 @@ namespace ToggleMeleeStance
                 return true;
             }
 
+            // Only the melee weapon held by the stance has its trigger release handled here. A
+            // release aimed at any other holdable must reach it: PullTriggerPrefix lets pulls on
+            // non-melee holdables through, and swallowing the matching release would leave that
+            // weapon's trigger latched (automatic weapons keep firing, others cannot fire again).
+            // This also covers the release the game sends to the outgoing firearm when the stance
+            // switches to the basic melee slot.
+            if (!IsMeleeWeapon(GetCurrentHoldable(__instance)))
+                return true;
+
             return false;
         }
 
@@ -692,6 +762,11 @@ namespace ToggleMeleeStance
                 return;
             }
 
+            // The game's ReportMeleeDone switches back to the cached slot through OnMeleeDone and
+            // ChangeWeapon before our postfix runs; mark that this slot exit is the attack's own
+            // completion so ChangeWeaponPostfix leaves it to ReportMeleeDonePostfix.
+            state.CompletingMeleeAttack = true;
+
             PrepareMeleeAnimatorForFutureDraw(__instance);
         }
 
@@ -706,6 +781,8 @@ namespace ToggleMeleeStance
                 return;
 
             ToggleState state = GetState(equipmentManager);
+
+            state.CompletingMeleeAttack = false;
 
             if (state.SheatheAfterAttack)
             {
@@ -761,6 +838,94 @@ namespace ToggleMeleeStance
             CacheSafeMeleeAnimatorStateIfUseful(__instance, "ChargeMelee(true)");
         }
 
+        // ChangeWeapon is where the equipment actually leaves the basic melee slot. A toggled
+        // melee attack normally ends through Weapon.ReportMeleeDone, an animation event on the
+        // melee weapon. When the game puts that weapon away by itself first (Endless mode card
+        // selection deactivates the holdable and then calls OnMeleeDone; inventory changes,
+        // forced amulet selection and other mods use forced ChangeWeapon calls), the event never
+        // arrives and AttackInProgress / SheatheAfterAttack would stay set indefinitely. Those
+        // stale flags stop MaintainToggledMelee from re-entering the stance and made
+        // ReleaseTriggerPrefix swallow trigger releases. Resolve them here, at the slot exit.
+        private static void ChangeWeaponPostfix(object __instance)
+        {
+            if (!IsModActive() || __instance == null)
+                return;
+
+            ToggleState state;
+
+            if (!States.TryGetValue(__instance, out state) || state == null)
+                return;
+
+            if (!state.AttackInProgress && !state.SheatheAfterAttack)
+                return;
+
+            // The attack is completing normally; ReportMeleeDonePostfix owns this transition.
+            if (state.CompletingMeleeAttack)
+                return;
+
+            // Entering the slot, or a ChangeWeapon call that did not change anything.
+            if (IsBasicMeleeSlotSelected(__instance))
+                return;
+
+            AbandonInterruptedMeleeAttack(__instance, state);
+        }
+
+        private static bool IsBasicMeleeSlotSelected(object equipmentManager)
+        {
+            if (pWeaponCurrentSlot == null || basicMeleeSlotValue == null || equipmentManager == null)
+                return false;
+
+            object slot = pWeaponCurrentSlot.GetValue(equipmentManager, null);
+
+            return basicMeleeSlotValue.Equals(slot);
+        }
+
+        // Ends the bookkeeping for a melee attack whose weapon was put away before it reported
+        // completion, leaving the flags as ReportMeleeDonePostfix would have left them. The game
+        // has already committed its own weapon change, so nothing is invoked on the game here:
+        // a stance that is still toggled is re-entered by MaintainToggledMelee on its normal
+        // retry schedule (or exited by the existing external weapon switch handling).
+        private static void AbandonInterruptedMeleeAttack(object equipmentManager, ToggleState state)
+        {
+            bool sheathe = state.SheatheAfterAttack;
+
+            state.AttackInProgress = false;
+            state.SheatheAfterAttack = false;
+            state.PendingTapHold = false;
+            state.LongPressPassThrough = false;
+            state.WasMeleeHeldLastFrame = false;
+            state.MeleePressStartTime = 0f;
+
+            if (sheathe)
+            {
+                // The player had already asked to leave the stance during this attack.
+                state.IsToggled = false;
+                state.SuppressMeleeUntilReleased = true;
+                state.NextChargeAttemptTime = 0f;
+            }
+            else if (state.IsToggled)
+            {
+                state.NextChargeAttemptTime = Time.time + ClampRetryInterval();
+            }
+            else
+            {
+                state.NextChargeAttemptTime = 0f;
+            }
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo(
+                    "Melee attack interrupted by a weapon change before it finished. " +
+                    (sheathe
+                        ? "Staying sheathed."
+                        : state.IsToggled
+                            ? "Toggle melee stays ON and will re-enter the melee charge."
+                            : "Attack state cleared.") +
+                    " slot=" + (pWeaponCurrentSlot != null ? pWeaponCurrentSlot.GetValue(equipmentManager, null) : null)
+                );
+            }
+        }
+
         private static void CanInteractPostfix(ref bool __result)
         {
             // Vanilla already allows interaction; nothing to do.
@@ -812,6 +977,7 @@ namespace ToggleMeleeStance
             state.SuppressMeleeUntilReleased = false;
             state.NextChargeAttemptTime = Time.time + ClampRetryInterval();
             state.LastMaintainTime = Time.time;
+            state.CompletingMeleeAttack = false;
 
             state.PendingTapHold = false;
             state.LongPressPassThrough = false;
@@ -1562,6 +1728,10 @@ namespace ToggleMeleeStance
             // Time.time of the last frame the toggle stance was actively maintained. Used by the
             // interaction fix to avoid overriding vanilla lockouts when equipment input is halted.
             public float LastMaintainTime;
+
+            // True between ReportMeleeDonePrefix and ReportMeleeDonePostfix, while the game's own
+            // attack completion switches the equipment back off the basic melee slot.
+            public bool CompletingMeleeAttack;
         }
 
         private sealed class SafeAnimatorState
