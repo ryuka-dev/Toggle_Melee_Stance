@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Il cambio arma esce dalla postura da mischia"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "Con la postura da mischia attiva, selezionare un'arma esce dalla postura e passa a quell'arma: tasti degli slot arma (1-5 di default), cambio arma con la rotellina del mouse o la croce direzionale del controller e il tasto dell'ultima arma usata. Una selezione fatta durante un attacco in mischia viene applicata al termine dell'attacco. I consumabili negli slot 3-5 vengono usati senza uscire dalla postura da mischia."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

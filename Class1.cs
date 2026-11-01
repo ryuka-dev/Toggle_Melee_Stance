@@ -33,6 +33,7 @@ namespace ToggleMeleeStance
         internal static ConfigEntry<bool> EnableTapHoldMeleeKey;
         internal static ConfigEntry<bool> SwapQuickMeleeAndEquipMelee;
         internal static ConfigEntry<float> MeleeToggleTapThreshold;
+        internal static ConfigEntry<bool> WeaponSwitchExitsMeleeStance;
         internal static ConfigEntry<float> ReChargeRetryInterval;
         internal static ConfigEntry<bool> LogStateChanges;
 
@@ -84,6 +85,22 @@ namespace ToggleMeleeStance
         private static FieldInfo fAimingInputHeld;
         private static FieldInfo fMeleeInputCooldown;
         private static FieldInfo fCurrentParries;
+
+        // Optional members for leaving the stance when the player selects a weapon. A missing or
+        // changed member disables only the entry point that needs it.
+        private static MethodInfo mNextWeapon;
+        private static MethodInfo mPreviousWeapon;
+        private static MethodInfo mSelectLastUsedWeapon;
+        private static MethodInfo mInventoryItemUse;
+        private static PropertyInfo pWeaponSwitchingPrevented;
+        private static PropertyInfo pGamepadUsed;
+        private static PropertyInfo pInventoryItemDefinition;
+        private static PropertyInfo pInventoryItemUseType;
+        private static FieldInfo fItemDefinitionPrefab;
+        private static FieldInfo fEquippedItems;
+        private static object inventorySlotNoneValue;
+        private static object consumableUseTypeValue;
+        private static bool changeWeaponSignatureMatches;
 
         private static readonly ConditionalWeakTable<object, ToggleState> States =
             new ConditionalWeakTable<object, ToggleState>();
@@ -164,6 +181,13 @@ namespace ToggleMeleeStance
                 )
             );
 
+            WeaponSwitchExitsMeleeStance = Config.Bind(
+                "Melee",
+                "WeaponSwitchExitsMeleeStance",
+                true,
+                "When melee stance is on, selecting a weapon leaves the stance and switches to it: the weapon slot keys (1-5 by default), weapon cycling with the scroll wheel or gamepad d-pad, and the last used weapon key. A selection made during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
+            );
+
             LogStateChanges = Config.Bind(
                 "Debug",
                 "LogStateChanges",
@@ -221,6 +245,27 @@ namespace ToggleMeleeStance
                     "A melee attack interrupted by a forced weapon change may leave the stance state stale."
                 );
             }
+
+            // Optional: a weapon selection made while melee stance is on leaves the stance and
+            // performs that selection (see HandleWeaponSelectionRequest). Each entry point is
+            // patched only when its signature matches, so a game update that changes one of them
+            // disables only that entry point.
+            if (CanHandleWeaponSlotKeys())
+            {
+                Patch(mChangeWeapon, prefix: nameof(ChangeWeaponPrefix));
+            }
+            else
+            {
+                Logger.LogWarning(
+                    "Weapon slot keys will not leave melee stance: could not resolve " +
+                    "EquipmentManager.ChangeWeapon(InventorySlot, bool forced, bool navigatedDirectlyTo) " +
+                    "or the equipped item members it needs."
+                );
+            }
+
+            PatchWeaponSelectionEntry(mNextWeapon, nameof(NextWeaponPrefix), "EquipmentManager.NextWeapon()");
+            PatchWeaponSelectionEntry(mPreviousWeapon, nameof(PreviousWeaponPrefix), "EquipmentManager.PreviousWeapon(InventorySlot)");
+            PatchWeaponSelectionEntry(mSelectLastUsedWeapon, nameof(SelectLastUsedWeaponPrefix), "EquipmentManager.SelectLastUsedWeapon()");
 
             Logger.LogInfo("Toggle Melee Stance loaded.");
         }
@@ -368,6 +413,8 @@ namespace ToggleMeleeStance
                 }
             }
 
+            ResolveWeaponSelectionMembers();
+
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
                    Require(mPullTrigger, "EquipmentManager.PullTrigger()") &&
@@ -421,6 +468,137 @@ namespace ToggleMeleeStance
                 actual + ")"
             );
             return false;
+        }
+
+        // Members used when a weapon selection ends the stance. All optional: each entry point
+        // checks what it needs before it is patched. Methods that are invoked later are looked up
+        // with their exact parameter types, so a changed signature leaves them unresolved instead
+        // of failing on every call.
+        private static void ResolveWeaponSelectionMembers()
+        {
+            if (pWeaponCurrentSlot == null || !pWeaponCurrentSlot.PropertyType.IsEnum)
+                return;
+
+            Type slotType = pWeaponCurrentSlot.PropertyType;
+
+            inventorySlotNoneValue = ParseEnumOrNull(slotType, "None");
+
+            changeWeaponSignatureMatches =
+                HasParameterTypes(mChangeWeapon, slotType, typeof(bool), typeof(bool)) &&
+                mChangeWeapon.GetParameters()[1].Name == "forced" &&
+                mChangeWeapon.GetParameters()[2].Name == "navigatedDirectlyTo";
+
+            mNextWeapon = AccessTools.Method(equipmentManagerType, "NextWeapon", Type.EmptyTypes);
+            mPreviousWeapon = AccessTools.Method(equipmentManagerType, "PreviousWeapon", new Type[] { slotType });
+            mSelectLastUsedWeapon = AccessTools.Method(equipmentManagerType, "SelectLastUsedWeapon", Type.EmptyTypes);
+
+            pWeaponSwitchingPrevented = FindPropertyRecursive(equipmentManagerType, "weaponSwitchingPrevented");
+            pGamepadUsed = FindPropertyRecursive(equipmentManagerType, "GamepadUsed");
+
+            if (pWeaponSwitchingPrevented != null && pWeaponSwitchingPrevented.PropertyType != typeof(bool))
+                pWeaponSwitchingPrevented = null;
+
+            if (pGamepadUsed != null && pGamepadUsed.PropertyType != typeof(bool))
+                pGamepadUsed = null;
+
+            // equippedItems is Dictionary<InventorySlot, InventoryItem>; the item type is taken from
+            // it rather than looked up by name.
+            fEquippedItems = FindFieldRecursive(equipmentManagerType, "equippedItems");
+
+            Type[] dictionaryTypes = fEquippedItems != null && fEquippedItems.FieldType.IsGenericType
+                ? fEquippedItems.FieldType.GetGenericArguments()
+                : null;
+
+            if (dictionaryTypes == null ||
+                dictionaryTypes.Length != 2 ||
+                dictionaryTypes[0] != slotType ||
+                !typeof(System.Collections.IDictionary).IsAssignableFrom(fEquippedItems.FieldType))
+            {
+                fEquippedItems = null;
+                return;
+            }
+
+            Type inventoryItemType = dictionaryTypes[1];
+
+            // InventoryItem.Use gained its withKeyBind parameter in 1.0.2.
+            mInventoryItemUse = AccessTools.Method(inventoryItemType, "Use", new Type[] { typeof(bool) });
+            pInventoryItemDefinition = FindPropertyRecursive(inventoryItemType, "itemDefinition");
+            pInventoryItemUseType = FindPropertyRecursive(inventoryItemType, "UseType");
+
+            if (pInventoryItemDefinition != null)
+                fItemDefinitionPrefab = FindFieldRecursive(pInventoryItemDefinition.PropertyType, "prefab");
+
+            if (fItemDefinitionPrefab != null && !typeof(UnityEngine.Object).IsAssignableFrom(fItemDefinitionPrefab.FieldType))
+                fItemDefinitionPrefab = null;
+
+            if (pInventoryItemUseType != null && pInventoryItemUseType.PropertyType.IsEnum)
+                consumableUseTypeValue = ParseEnumOrNull(pInventoryItemUseType.PropertyType, "Consumable");
+        }
+
+        private static object ParseEnumOrNull(Type enumType, string name)
+        {
+            try
+            {
+                return Enum.Parse(enumType, name);
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        private static bool HasParameterTypes(MethodInfo method, params Type[] parameterTypes)
+        {
+            if (method == null)
+                return false;
+
+            ParameterInfo[] parameters = method.GetParameters();
+
+            if (parameters.Length != parameterTypes.Length)
+                return false;
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType != parameterTypes[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsWeaponSelectionBaseResolved()
+        {
+            return pWeaponCurrentSlot != null &&
+                   basicMeleeSlotValue != null &&
+                   inventorySlotNoneValue != null;
+        }
+
+        private static bool CanHandleWeaponSlotKeys()
+        {
+            return IsWeaponSelectionBaseResolved() &&
+                   changeWeaponSignatureMatches &&
+                   fEquippedItems != null &&
+                   pInventoryItemDefinition != null &&
+                   fItemDefinitionPrefab != null &&
+                   pInventoryItemUseType != null &&
+                   consumableUseTypeValue != null &&
+                   mInventoryItemUse != null &&
+                   pGamepadUsed != null &&
+                   pWeaponSwitchingPrevented != null;
+        }
+
+        private void PatchWeaponSelectionEntry(MethodInfo original, string prefix, string name)
+        {
+            if (original != null && IsWeaponSelectionBaseResolved())
+            {
+                Patch(original, prefix: prefix);
+                return;
+            }
+
+            Logger.LogWarning(
+                "Weapon selection through " + name + " will not leave melee stance: " +
+                "the method or the slot members it needs could not be resolved."
+            );
         }
 
         private void Patch(
@@ -585,6 +763,9 @@ namespace ToggleMeleeStance
                 return true;
 
             ToggleState state = GetState(__instance);
+
+            // The game ran its equipment input update this frame (see HandleWeaponSelectionRequest).
+            state.LastEquipmentInputTime = Time.time;
 
             // Mark the stance as actively maintained this frame so the interaction fix knows
             // the equipment input pump is live (see CanInteractPostfix).
@@ -801,6 +982,10 @@ namespace ToggleMeleeStance
                     Log?.LogInfo("Melee attack finished. Staying sheathed.");
                 }
 
+                // The game has switched back to the cached weapon and allows weapon changes again,
+                // so a selection the player made during the attack can now be performed.
+                ReplayPendingWeaponSelection(equipmentManager, state);
+
                 return;
             }
 
@@ -926,6 +1111,337 @@ namespace ToggleMeleeStance
             }
         }
 
+        // A weapon slot key (Slot1-Slot5 call ChangeWeapon with navigatedDirectlyTo). While the
+        // stance holds the basic melee slot the game sets weaponSwitchingPrevented, so the key
+        // would otherwise be ignored. Forced calls and calls without navigatedDirectlyTo come from
+        // the game itself and are left alone.
+        private static void ChangeWeaponPrefix(
+            object __instance,
+            object[] __args,
+            bool forced,
+            bool navigatedDirectlyTo
+        )
+        {
+            if (forced || !navigatedDirectlyTo || __args == null || __args.Length == 0)
+                return;
+
+            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Slot, __args[0], "slot key");
+        }
+
+        // Weapon cycling (scroll wheel, gamepad d-pad). NextWeapon and PreviousWeapon do nothing
+        // while the basic melee slot is selected.
+        private static void NextWeaponPrefix(object __instance)
+        {
+            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Next, null, "next weapon");
+        }
+
+        private static void PreviousWeaponPrefix(object __instance, object[] __args)
+        {
+            // The input path calls PreviousWeapon without a starting slot; using up the last
+            // consumable of a gadget slot passes that slot instead.
+            if (__args == null || __args.Length == 0 || !inventorySlotNoneValue.Equals(__args[0]))
+                return;
+
+            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.Previous, null, "previous weapon");
+        }
+
+        // The last used weapon key (LastUsedSlot). Once the stance has ended the game resolves
+        // the target from the restored weapon exactly as it does outside the stance.
+        private static void SelectLastUsedWeaponPrefix(object __instance)
+        {
+            HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.LastUsed, null, "last used weapon");
+        }
+
+        // Shared handling for a weapon selection made while the stance is on. It changes only the
+        // stance state (through ToggleOff when the game must end its melee charge); the game's own
+        // selection method always runs afterwards and performs the switch with its usual checks.
+        private static void HandleWeaponSelectionRequest(
+            object equipmentManager,
+            WeaponSelectionRequest request,
+            object slot,
+            string source
+        )
+        {
+            if (!IsModActive() ||
+                WeaponSwitchExitsMeleeStance == null ||
+                !WeaponSwitchExitsMeleeStance.Value ||
+                equipmentManager == null)
+            {
+                return;
+            }
+
+            ToggleState state;
+
+            if (!States.TryGetValue(equipmentManager, out state) || state == null)
+                return;
+
+            // The game's own attack completion is changing weapons; ReportMeleeDonePostfix owns it.
+            if (state.CompletingMeleeAttack)
+                return;
+
+            // A sheathe is already pending for the current attack (melee key or an earlier selection).
+            bool sheathePending = !state.IsToggled && state.SheatheAfterAttack && state.AttackInProgress;
+
+            if (!state.IsToggled && !sheathePending)
+                return;
+
+            // Only while the game is running its equipment input update. Slot callbacks keep firing
+            // in states where it is halted (flashback, straitjacket status); those keep vanilla behavior.
+            if (Time.time - state.LastEquipmentInputTime > StanceLivenessWindow)
+                return;
+
+            if (request == WeaponSelectionRequest.Slot)
+            {
+                if (IsDirectConsumableUse(equipmentManager, slot))
+                {
+                    UseConsumableInStance(equipmentManager, slot);
+                    return;
+                }
+
+                // An empty slot is ignored by the game, so the stance stays.
+                if (!IsSlotSelectableByChangeWeapon(equipmentManager, slot))
+                    return;
+            }
+
+            if (!IsBasicMeleeSlotSelected(equipmentManager))
+            {
+                ExitStanceWithoutMeleeWeapon(equipmentManager, state, source);
+                return;
+            }
+
+            if (sheathePending)
+            {
+                SetPendingWeaponSelection(state, request, slot, source);
+                return;
+            }
+
+            if (state.AttackInProgress)
+            {
+                // ToggleOff only marks the stance to sheathe once the attack finishes; the game
+                // still refuses the switch now, so it is performed after the attack.
+                ToggleOff(equipmentManager, state);
+                SetPendingWeaponSelection(state, request, slot, source);
+                return;
+            }
+
+            // The melee weapon has been selected but ChargeBasicMeleeRoutine has not started its
+            // charge yet (one frame). Ending the stance now would let that routine charge the
+            // weapon the game switches back to, so the selection is ignored like any switch
+            // during a draw.
+            if (!IsInMeleeCharge(equipmentManager))
+                return;
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo("Weapon selected in melee stance (" + source + "). Leaving melee stance. slot=" + slot);
+            }
+
+            // OnMeleeDone (through ToggleOff) clears weaponSwitchingPrevented and restores the
+            // cached weapon; the game's selection then continues from there.
+            ToggleOff(equipmentManager, state);
+        }
+
+        // Mirrors the check ChangeWeapon makes before using a consumable from a slot key: the slot
+        // holds a consumable, the selection came from a key, and no gamepad is in use.
+        private static bool IsDirectConsumableUse(object equipmentManager, object slot)
+        {
+            object item = GetEquippedItem(equipmentManager, slot);
+
+            if (item == null)
+                return false;
+
+            if (!consumableUseTypeValue.Equals(pInventoryItemUseType.GetValue(item, null)))
+                return false;
+
+            return !GetBoolProperty(pGamepadUsed, equipmentManager);
+        }
+
+        // Uses a consumable from a slot key without leaving the stance. ChangeWeapon would use it
+        // itself but returns first while weaponSwitchingPrevented is set. With withKeyBind the
+        // item use only consumes the item (and refills the slot from the backpack); it does not
+        // change the selected weapon.
+        private static void UseConsumableInStance(object equipmentManager, object slot)
+        {
+            // When switching is allowed the game's own call uses the item; using it here as well
+            // would use it twice. The same applies when the slot is already the current one, where
+            // the game returns before using anything.
+            if (!GetBoolProperty(pWeaponSwitchingPrevented, equipmentManager))
+                return;
+
+            if (slot == null || slot.Equals(pWeaponCurrentSlot.GetValue(equipmentManager, null)))
+                return;
+
+            object item = GetEquippedItem(equipmentManager, slot);
+
+            if (item == null)
+                return;
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo("Consumable used from a slot key in melee stance. Melee stance stays ON. slot=" + slot);
+            }
+
+            try
+            {
+                mInventoryItemUse.Invoke(item, new object[] { true });
+            }
+            catch (Exception ex)
+            {
+                Log?.LogError("Failed to invoke InventoryItem.Use: " + ex);
+            }
+        }
+
+        // Mirrors ChangeWeapon's own acceptance check for a slot: it must hold an item that has a
+        // prefab or is a consumable.
+        private static bool IsSlotSelectableByChangeWeapon(object equipmentManager, object slot)
+        {
+            object item = GetEquippedItem(equipmentManager, slot);
+
+            if (item == null)
+                return false;
+
+            object definition = pInventoryItemDefinition.GetValue(item, null);
+            UnityEngine.Object prefab = definition != null
+                ? fItemDefinitionPrefab.GetValue(definition) as UnityEngine.Object
+                : null;
+
+            if (prefab != null)
+                return true;
+
+            return consumableUseTypeValue.Equals(pInventoryItemUseType.GetValue(item, null));
+        }
+
+        private static object GetEquippedItem(object equipmentManager, object slot)
+        {
+            if (fEquippedItems == null || equipmentManager == null || slot == null)
+                return null;
+
+            System.Collections.IDictionary items = fEquippedItems.GetValue(equipmentManager) as System.Collections.IDictionary;
+
+            if (items == null || !items.Contains(slot))
+                return null;
+
+            return items[slot];
+        }
+
+        // The stance is on but the game is not holding the basic melee slot: it is between melee
+        // charges and MaintainToggledMelee is retrying. The game does not block the switch here,
+        // so only the stance state is cleared. OnMeleeDone must not be called in this state: it
+        // hides the renderers of the weapon that is already drawn and then returns without
+        // selecting it again.
+        private static void ExitStanceWithoutMeleeWeapon(object equipmentManager, ToggleState state, string source)
+        {
+            state.IsToggled = false;
+            state.AttackInProgress = false;
+            state.SheatheAfterAttack = false;
+            state.SuppressMeleeUntilReleased = true;
+            state.NextChargeAttemptTime = 0f;
+
+            state.PendingTapHold = false;
+            state.LongPressPassThrough = false;
+            state.WasMeleeHeldLastFrame = false;
+            state.MeleePressStartTime = 0f;
+            ClearPendingWeaponSelection(state);
+
+            SetMeleePressed(equipmentManager, false);
+            SetAlternativeMeleePressed(equipmentManager, false);
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo(
+                    "Weapon selected in melee stance (" + source + ") while the melee weapon was not drawn. " +
+                    "Toggle melee OFF."
+                );
+            }
+        }
+
+        private static void SetPendingWeaponSelection(
+            ToggleState state,
+            WeaponSelectionRequest request,
+            object slot,
+            string source
+        )
+        {
+            // The latest selection made during the attack wins.
+            state.PendingWeaponSelection = request;
+            state.PendingWeaponSelectionSlot = slot;
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo(
+                    "Weapon selected during a melee attack (" + source + "). " +
+                    "It will be applied after the attack finishes. slot=" + slot
+                );
+            }
+        }
+
+        private static void ClearPendingWeaponSelection(ToggleState state)
+        {
+            state.PendingWeaponSelection = WeaponSelectionRequest.None;
+            state.PendingWeaponSelectionSlot = null;
+        }
+
+        // Performs the selection recorded during the attack through the same game method the
+        // player's input used, so it goes through the game's normal checks. The request is cleared
+        // first, whether or not the call succeeds. A selection recorded for an attack that ended
+        // through a forced weapon change (AbandonInterruptedMeleeAttack) is not performed: the game
+        // has already chosen the weapon, and the request is cleared on the next ToggleOn.
+        private static void ReplayPendingWeaponSelection(object equipmentManager, ToggleState state)
+        {
+            WeaponSelectionRequest request = state.PendingWeaponSelection;
+            object slot = state.PendingWeaponSelectionSlot;
+
+            ClearPendingWeaponSelection(state);
+
+            if (request == WeaponSelectionRequest.None)
+                return;
+
+            // The option may have been turned off while the attack was finishing.
+            if (WeaponSwitchExitsMeleeStance == null || !WeaponSwitchExitsMeleeStance.Value)
+                return;
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo("Applying the weapon selection made during the melee attack: " + request + " slot=" + slot);
+            }
+
+            try
+            {
+                switch (request)
+                {
+                    case WeaponSelectionRequest.Slot:
+                        mChangeWeapon.Invoke(equipmentManager, new object[] { slot, false, true });
+                        break;
+
+                    case WeaponSelectionRequest.Next:
+                        mNextWeapon.Invoke(equipmentManager, null);
+                        break;
+
+                    case WeaponSelectionRequest.Previous:
+                        mPreviousWeapon.Invoke(equipmentManager, new object[] { inventorySlotNoneValue });
+                        break;
+
+                    case WeaponSelectionRequest.LastUsed:
+                        mSelectLastUsedWeapon.Invoke(equipmentManager, null);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log?.LogError("Failed to apply the weapon selection made during the melee attack: " + ex);
+            }
+        }
+
+        private static bool GetBoolProperty(PropertyInfo property, object instance)
+        {
+            if (property == null || instance == null)
+                return false;
+
+            object value = property.GetValue(instance, null);
+
+            return value is bool && (bool)value;
+        }
+
         private static void CanInteractPostfix(ref bool __result)
         {
             // Vanilla already allows interaction; nothing to do.
@@ -983,6 +1499,7 @@ namespace ToggleMeleeStance
             state.LongPressPassThrough = false;
             state.WasMeleeHeldLastFrame = false;
             state.MeleePressStartTime = 0f;
+            ClearPendingWeaponSelection(state);
 
             if (LogStateChanges.Value)
             {
@@ -1501,6 +2018,7 @@ namespace ToggleMeleeStance
             state.LongPressPassThrough = false;
             state.WasMeleeHeldLastFrame = false;
             state.MeleePressStartTime = 0f;
+            ClearPendingWeaponSelection(state);
 
             SetMeleePressed(equipmentManager, false);
             SetAlternativeMeleePressed(equipmentManager, false);
@@ -1732,6 +2250,24 @@ namespace ToggleMeleeStance
             // True between ReportMeleeDonePrefix and ReportMeleeDonePostfix, while the game's own
             // attack completion switches the equipment back off the basic melee slot.
             public bool CompletingMeleeAttack;
+
+            // Time.time of the last frame the game ran its equipment input update
+            // (HandleMeleeInput), whether or not the stance is on.
+            public float LastEquipmentInputTime;
+
+            // A weapon selection made during a toggled melee attack. It is performed once the
+            // attack has finished and the stance has sheathed (ReplayPendingWeaponSelection).
+            public WeaponSelectionRequest PendingWeaponSelection;
+            public object PendingWeaponSelectionSlot;
+        }
+
+        private enum WeaponSelectionRequest
+        {
+            None,
+            Slot,
+            Next,
+            Previous,
+            LastUsed
         }
 
         private sealed class SafeAnimatorState

@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Weapon Switch Exits Melee Stance"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "When melee stance is on, selecting a weapon leaves the stance and switches to it: the weapon slot keys (1-5 by default), weapon cycling with the scroll wheel or gamepad d-pad, and the last used weapon key. A selection made during a melee attack is applied when the attack finishes. Consumables in slots 3-5 are used without leaving melee stance."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

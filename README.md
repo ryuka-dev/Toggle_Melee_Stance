@@ -40,5 +40,16 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
 - The plugin resolves all game members by name through Harmony `AccessTools`; there is no
   compile-time dependency on the Sulfur assemblies. A missing member logs an error and
   disables only the affected hook.
+- Weapon selection while the stance is on (`WeaponSwitchExitsMeleeStance`): the game refuses
+  every non-forced `ChangeWeapon` while `weaponSwitchingPrevented` is set, and `NextWeapon` /
+  `PreviousWeapon` return early while the basic melee slot is selected. Prefixes on
+  `ChangeWeapon` (slot keys only, recognised by `navigatedDirectlyTo`), `NextWeapon`,
+  `PreviousWeapon` (only without a starting slot) and `SelectLastUsedWeapon` end the stance
+  through `ToggleOff` and let the original method perform the switch. A selection made during
+  an attack is stored and replayed from `ReportMeleeDonePostfix` once the stance has sheathed.
+  A keyboard consumable in a gadget slot is used through `InventoryItem.Use(true)` without
+  leaving the stance, mirroring the check `ChangeWeapon` makes before it uses one. Each entry
+  point is patched only when its signature matches (`ChangeWeapon(InventorySlot, bool forced,
+  bool navigatedDirectlyTo)` and `InventoryItem.Use(bool)` are 1.0.2 signatures).
 - Target game version: SULFUR v0.18.5 (verified). All patched members are unchanged since
   v0.17.4.

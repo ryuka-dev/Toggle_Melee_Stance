@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "武器切り替えで近接構えを解除"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "近接構えがオンのとき、武器を選ぶと構えを解除してその武器に持ち替えます。対象は武器スロットキー（初期設定は1～5）、マウスホイールやゲームパッドの十字キーによる武器切り替え、前回の武器キーです。近接攻撃中に選んだ場合は、攻撃の終了後に持ち替えます。スロット3～5の消耗品は、近接構えを解除せずに使用します。"
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "ログ状態変更"
     },

@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Waffenwechsel beendet Nahkampfhaltung"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "Wenn die Nahkampfhaltung aktiv ist, beendet die Auswahl einer Waffe die Haltung und wechselt zu dieser Waffe: Waffenplatz-Tasten (standardmäßig 1-5), Waffenwechsel per Mausrad oder Gamepad-Steuerkreuz und die Taste für die zuletzt benutzte Waffe. Eine Auswahl während eines Nahkampfangriffs wird ausgeführt, sobald der Angriff endet. Verbrauchsgegenstände in den Plätzen 3-5 werden benutzt, ohne die Nahkampfhaltung zu verlassen."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

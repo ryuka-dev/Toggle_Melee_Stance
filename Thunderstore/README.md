@@ -15,6 +15,7 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - Optionally swap the tap and hold actions, so tap performs the quick melee and hold toggles the stance.
 - While melee stance is toggled on, press the normal Fire action to perform one melee attack.
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
+- While melee stance is toggled on, select a weapon (slot keys, scroll wheel / d-pad, or the last used weapon key) to leave the stance and switch straight to it, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
 - Lets you pick up items and use interactables while melee stance is active. The base game blocks all interaction while the basic melee is out, which the persistent stance would otherwise leave active the whole time.
 - Uses SULFUR's own input actions instead of hardcoded mouse buttons, so it should work with rebinding, controller, and Steam Deck layouts.
 - Keeps the original melee attack, parry, alternative stance, and weapon-specific behavior.
@@ -47,6 +48,11 @@ Fire
 
 Aim / Alt Fire
 → Keep vanilla alternative melee stance / block behavior
+
+Weapon slot key / scroll wheel / d-pad / last used weapon key
+→ Leave melee stance and switch to the selected weapon
+→ During a melee attack, the switch happens when the attack finishes
+→ A consumable in slots 3-5 is used and melee stance stays on
 ```
 
 The mod does not hardcode `F`, mouse buttons, or controller buttons.
@@ -103,6 +109,7 @@ ReChargeRetryInterval = 0.08
 EnableTapHoldMeleeKey = true
 SwapQuickMeleeAndEquipMelee = false
 MeleeToggleTapThreshold = 0.13
+WeaponSwitchExitsMeleeStance = true
 
 [Visual]
 ResetMeleeAnimatorBeforeSheathe = true
@@ -162,6 +169,23 @@ Lower values make hold behavior activate faster.
 
 Higher values make tap behavior easier.
 
+`WeaponSwitchExitsMeleeStance`
+
+Controls what happens when you select a weapon while melee stance is toggled on. Covers the weapon slot keys (1-5 by default), weapon cycling with the scroll wheel or gamepad d-pad, and the last used weapon key.
+
+```text
+true
+→ Default.
+→ Selecting a weapon leaves melee stance and switches to that weapon.
+→ A selection made during a melee attack is applied when the attack finishes.
+→ A consumable in slots 3-5 is used and melee stance stays on.
+→ An empty slot is ignored and melee stance stays on.
+
+false
+→ Weapon selection is ignored while melee stance is on, as in the base game.
+→ Press the melee key to leave the stance first.
+```
+
 `ResetMeleeAnimatorBeforeSheathe`
 
 Keeps repeated melee draws visually stable by resetting the melee Animator to a cached safe equip state before sheathing.
@@ -220,6 +244,7 @@ It should be compatible with most mods. Compatibility issues are most likely wit
 - `EquipmentManager.HandleMeleeInput`
 - `EquipmentManager.HandleAimInput`
 - `EquipmentManager.PullTrigger`
+- `EquipmentManager.ChangeWeapon`, `NextWeapon`, `PreviousWeapon`, `SelectLastUsedWeapon`
 - `Weapon.ReportMeleeDone`
 - `Interactable.CanInteract`
 - melee weapon Animator behavior

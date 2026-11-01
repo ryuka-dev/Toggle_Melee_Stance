@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Vapenbyte avslutar närstridsställning"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "När närstridsställningen är på avslutar ett vapenval ställningen och byter till det vapnet: vapenplatstangenterna (1-5 som standard), vapenbyte med mushjulet eller handkontrollens styrkors och tangenten för senast använda vapen. Ett val som görs under en närstridsattack utförs när attacken är klar. Förbrukningsföremål på plats 3-5 används utan att närstridsställningen avslutas."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

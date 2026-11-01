@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "切换武器时退出近战姿态"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "近战姿态开启时，选择武器会退出姿态并切换到该武器：包括武器栏位键（默认 1-5）、用鼠标滚轮或手柄方向键切换武器，以及上一把武器键。在近战攻击中做出的选择会在攻击结束后执行。3-5 号栏位中的消耗品会直接使用，不会退出近战姿态。"
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "记录状态变化"
     },

@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "تبديل السلاح ينهي وضعية القتال القريب"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "عند تفعيل وضعية القتال القريب، يؤدي اختيار سلاح إلى الخروج من الوضعية والتبديل إلى ذلك السلاح: مفاتيح خانات الأسلحة (1-5 افتراضيًا)، وتبديل الأسلحة بعجلة الفأرة أو بأزرار الاتجاه في ذراع التحكم، ومفتاح آخر سلاح مستخدم. الاختيار الذي يتم أثناء هجوم قريب يُنفَّذ عند انتهاء الهجوم. تُستخدم المواد الاستهلاكية في الخانات 3-5 دون الخروج من وضعية القتال القريب."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

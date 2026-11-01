@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Выход из стойки ближнего боя при смене оружия"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "Когда стойка ближнего боя включена, выбор оружия выводит из стойки и переключает на это оружие: клавиши слотов оружия (по умолчанию 1-5), смена оружия колесом мыши или крестовиной геймпада и клавиша последнего использованного оружия. Выбор, сделанный во время атаки ближнего боя, применяется после её завершения. Расходники в слотах 3-5 используются без выхода из стойки ближнего боя."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

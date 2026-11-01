@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Silah değişimi yakın dövüş duruşunu sonlandırır"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "Yakın dövüş duruşu açıkken bir silah seçmek duruştan çıkarır ve o silaha geçer: silah yuvası tuşları (varsayılan 1-5), fare tekerleği veya oyun kumandasının yön tuşlarıyla silah değiştirme ve son kullanılan silah tuşu. Yakın dövüş saldırısı sırasında yapılan seçim, saldırı bitince uygulanır. 3-5 numaralı yuvalardaki tüketilebilir eşyalar yakın dövüş duruşundan çıkmadan kullanılır."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },

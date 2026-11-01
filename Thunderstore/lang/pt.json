@@ -101,6 +101,14 @@
       "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
     },
     {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "Trocar de arma sai da postura de combate"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "Com a postura de combate ativa, selecionar uma arma sai da postura e troca para essa arma: teclas de slot de arma (1-5 por padrão), troca de arma com a roda do mouse ou o direcional do controle, e a tecla da última arma usada. Uma seleção feita durante um ataque corpo a corpo é aplicada quando o ataque termina. Consumíveis nos slots 3-5 são usados sem sair da postura de combate."
+    },
+    {
       "key": "entry.Debug.LogStateChanges.name",
       "value": "Log State Changes"
     },
