@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "近接キーの操作モード"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "近接キーの操作方法です。初期設定では、タップで近接構えを切り替え、長押しで通常のクイック近接を使います。逆に、タップでクイック近接、長押しで構えの切り替えにもできます。押すたびに構えを切り替えるモード（クイック近接なし）もあります。最後のモードでは近接キーはゲーム本来の動作のままで、近接キーを押したまま射撃か前回の武器キーを押すと、攻撃せずに近接構えに入ります。どのモードでも、もう一度近接キーを押すと構えを解除します。"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "タップ：構え／長押し：クイック近接"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "タップ：クイック近接／長押し：構え"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "押すたびに構えを切り替え"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "通常のクイック近接／押しながら射撃：構え"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "有効化タップ長押し近接キー"
+      "value": "タップ／長押し近接キーを有効化（非推奨）"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "非推奨。移行のため、起動時に一度だけ読み込みます。「近接キーの操作モード」に置き換えられました。この項目が false で操作モードが初期値のままの場合、次回起動時に操作モードを「押すたびに構えを切り替え」にし、この項目を true に戻します。"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "クイック近接と近接構えを入れ替え"
+      "value": "クイック近接と近接構えを入れ替え（非推奨）"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "非推奨。移行のため、起動時に一度だけ読み込みます。「近接キーの操作モード」に置き換えられました。この項目が true で、操作モードが初期値のまま、かつ「タップ／長押し近接キーを有効化」が true の場合、次回起動時に操作モードを「タップ：クイック近接／長押し：構え」にし、この項目を false に戻します。"
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "近接キーの操作モードのうち、タップ／長押しの2つのモードでのみ使います。この時間以内に離すとタップ、それより長く押すと長押しとして扱います。"
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

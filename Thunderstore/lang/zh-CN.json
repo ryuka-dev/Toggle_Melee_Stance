@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "近战键模式"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "近战键的操作方式。默认是点按切换近战姿态、长按使用原版快速近战。也可以反过来：点按使用快速近战、长按切换姿态。还可以每按一次就切换一次姿态（不再有快速近战）。最后一种模式让近战键和原版完全一致：按住近战键时按下开火或上一把武器键，就会进入近战姿态而不是挥砍。任何模式下，再按一次近战键都会退出近战姿态。"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "点按：姿态，长按：快速近战"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "点按：快速近战，长按：姿态"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "每次按下切换姿态"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "原版快速近战，按住 + 开火：姿态"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "启用点击长按近战键"
+      "value": "启用点击长按近战键（已弃用）"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "已弃用，只在启动时读取一次用于迁移，已由“近战键模式”取代。如果此项为 false 且近战键模式仍是默认值，下次启动时会把近战键模式设为“每次按下切换姿态”，并把此项重置为 true。"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "交换快速近战与近战姿态"
+      "value": "交换快速近战与近战姿态（已弃用）"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "已弃用，只在启动时读取一次用于迁移，已由“近战键模式”取代。如果此项为 true、近战键模式仍是默认值且“启用点击长按近战键”为 true，下次启动时会把近战键模式设为“点按：快速近战，长按：姿态”，并把此项重置为 false。"
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "只用于近战键模式中的两种点按 / 长按模式。按下时间不超过此值算作点按，更长则算作长按。"
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

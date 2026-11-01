@@ -55,5 +55,16 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   leaving the stance, mirroring the check `ChangeWeapon` makes before it uses one. Each entry
   point is patched only when its signature matches (`ChangeWeapon(InventorySlot, bool forced,
   bool navigatedDirectlyTo)` and `InventoryItem.Use(bool)` are 1.0.2 signatures).
+- Melee key behavior (`MeleeInputMode`): `GetMeleeKeyMode` is the one place that reads it.
+  `HandleMeleeInputPrefix` dispatches on it, and clears the tap / hold tracking when the value
+  changes at runtime. In `QuickMeleeChordToggle` the prefix returns `true` while the stance is
+  off, so the game charges on press and swings on release. `PullTriggerPrefix` and
+  `SelectLastUsedWeaponPrefix` call `TryEnterStanceFromChord`, which promotes a held quick melee
+  charge into the stance through `ToggleOn`, as the swapped tap / hold mode does at its
+  threshold. It requires `meleePressed`, `isInMeleeCharge`, the basic melee slot and a charging
+  melee weapon; `isInMeleeCharge` is set one frame after the press, so Fire on the press frame
+  (which the game reads before the melee key) never counts. `EnableTapHoldMeleeKey` and
+  `SwapQuickMeleeAndEquipMelee` are read once in `Awake` by `MigrateLegacyMeleeKeySettings`
+  and then reset to their defaults.
 - Target game version: SULFUR v0.18.5 (verified). All patched members are unchanged since
   v0.17.4.

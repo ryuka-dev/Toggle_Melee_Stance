@@ -10,9 +10,9 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 
 - Press the game's melee action once to keep your melee weapon drawn.
 - Press the melee action again to sheathe it and return to your previous weapon.
-- Tap the melee key to toggle melee stance.
-- Hold the melee key to use the original melee behavior.
-- Optionally swap the tap and hold actions, so tap performs the quick melee and hold toggles the stance.
+- By default, tap the melee key to toggle melee stance.
+- By default, hold the melee key to use the original melee behavior.
+- Pick another melee input mode if you prefer: swap tap and hold, toggle on every press, or keep the melee key exactly as in the base game and enter the stance by holding it and pressing Fire.
 - While melee stance is toggled on, press the normal Fire action to perform one melee attack.
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
 - While melee stance is toggled on, press a weapon slot key to leave the stance and switch straight to that slot, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
@@ -34,6 +34,8 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - Does not add new melee moves such as dashes or thrust attacks.
 
 ## Basic Controls
+
+With the default melee input mode (`TapToggleHoldQuickMelee`):
 
 ```text
 Tap Melee key
@@ -62,6 +64,39 @@ Last used weapon key / scroll wheel / d-pad
 The mod does not hardcode `F`, mouse buttons, or controller buttons.
 
 It uses the game's own input actions, so it should respect key rebinding and controller input better than raw key checks.
+
+### Melee input mode
+
+`MeleeInputMode` in the `[Melee]` section sets how the melee key works. If telling a tap from a hold feels finicky, try `QuickMeleeChordToggle`: it has no timing at all.
+
+```ini
+[Melee]
+# TapToggleHoldQuickMelee, TapQuickMeleeHoldToggle, PressToggles or QuickMeleeChordToggle
+MeleeInputMode = TapToggleHoldQuickMelee
+```
+
+```text
+TapToggleHoldQuickMelee
+→ Default.
+→ Tap to toggle melee stance, hold for the original quick melee.
+
+TapQuickMeleeHoldToggle
+→ Tap for the original quick melee, hold to toggle melee stance.
+
+PressToggles
+→ Every press toggles melee stance. There is no quick melee.
+
+QuickMeleeChordToggle
+→ The melee key works as in the base game: press and release for a quick melee.
+→ While holding the melee key, press Fire or the last used weapon key to enter melee stance instead of attacking.
+→ Press the melee key or the last used weapon key to leave melee stance.
+```
+
+On a gamepad with the default bindings, hold X or LB, then press RT (Fire) or Y (last used weapon).
+
+The two tap modes use `MeleeToggleTapThreshold` to tell a tap from a hold. With SULFUR Config installed, the option is listed as Melee Input Mode, with a short label for each value.
+
+Older configs that set `EnableTapHoldMeleeKey = false` or `SwapQuickMeleeAndEquipMelee = true` are carried over to the matching mode on the first start, as long as `MeleeInputMode` is still at its default.
 
 ## Shared Module Behavior
 
@@ -110,6 +145,8 @@ EnableMod = true
 [Melee]
 FirePerformsMeleeAttack = true
 ReChargeRetryInterval = 0.08
+MeleeInputMode = TapToggleHoldQuickMelee
+# Deprecated, read once for migration
 EnableTapHoldMeleeKey = true
 SwapQuickMeleeAndEquipMelee = false
 MeleeToggleTapThreshold = 0.13
@@ -140,28 +177,25 @@ When enabled, pressing the normal Fire action while melee is toggled on performs
 
 Controls how often the mod retries re-entering melee stance after the game clears the melee charge state.
 
+`MeleeInputMode`
+
+Sets how the melee key works. See Melee input mode above.
+
 `EnableTapHoldMeleeKey`
 
-When enabled, tapping the melee key toggles melee stance, while holding the melee key passes through to the original melee behavior.
+Deprecated, read once for migration. Replaced by `MeleeInputMode`.
+
+If this is `false` while `MeleeInputMode` is at its default, the next start sets `MeleeInputMode = PressToggles` and resets this entry to `true`.
 
 `SwapQuickMeleeAndEquipMelee`
 
-Requires `EnableTapHoldMeleeKey`. Swaps which action is tap and which is hold.
+Deprecated, read once for migration. Replaced by `MeleeInputMode`.
 
-```text
-false
-→ Default.
-→ Tap the melee key to toggle melee stance.
-→ Hold the melee key to perform the original quick melee attack.
-
-true
-→ Tap the melee key to perform the original quick melee attack.
-→ Hold the melee key to toggle melee stance.
-```
+If this is `true` while `MeleeInputMode` is at its default and `EnableTapHoldMeleeKey` is `true`, the next start sets `MeleeInputMode = TapQuickMeleeHoldToggle` and resets this entry to `false`.
 
 `MeleeToggleTapThreshold`
 
-Maximum press duration treated as a tap.
+Maximum press duration treated as a tap. Used only by the two tap modes, `TapToggleHoldQuickMelee` and `TapQuickMeleeHoldToggle`.
 
 Default:
 

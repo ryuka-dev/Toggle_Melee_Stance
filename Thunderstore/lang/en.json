@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Melee Input Mode"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "How the melee key works. TapToggleHoldQuickMelee (default): tap to toggle melee stance, hold for the original quick melee. TapQuickMeleeHoldToggle: tap for the original quick melee, hold to toggle melee stance. PressToggles: every press toggles melee stance, with no quick melee. QuickMeleeChordToggle: the melee key works as in the base game, and pressing Fire or the last used weapon key while holding it enters melee stance instead of attacking. In every mode, press the melee key again to leave melee stance."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Tap: stance, hold: quick melee"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Tap: quick melee, hold: stance"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Every press toggles stance"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Quick melee, hold + Fire: stance"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Enable Tap Hold Melee Key (Deprecated)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Deprecated, read once for migration. Replaced by MeleeInputMode. If this is false while MeleeInputMode is at its default, the next start sets MeleeInputMode to PressToggles and resets this entry to true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Swap Quick Melee And Equip Melee"
+      "value": "Swap Quick Melee And Equip Melee (Deprecated)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Deprecated, read once for migration. Replaced by MeleeInputMode. If this is true while MeleeInputMode is at its default and EnableTapHoldMeleeKey is true, the next start sets MeleeInputMode to TapQuickMeleeHoldToggle and resets this entry to false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Used only by the TapToggleHoldQuickMelee and TapQuickMeleeHoldToggle input modes. Maximum press duration treated as a tap. A longer press counts as a hold."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

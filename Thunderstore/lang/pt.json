@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Modo da tecla corpo a corpo"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "Como funciona a tecla corpo a corpo. Por padrão, um toque alterna a postura de combate e segurar faz o corpo a corpo rápido original. Também dá para inverter: toque para o corpo a corpo rápido, segurar para a postura. Ou cada toque alterna a postura (sem corpo a corpo rápido). No último modo, a tecla funciona como no jogo base, e apertar Atirar ou a tecla da última arma usada enquanto a segura entra na postura de combate em vez de atacar. Em qualquer modo, aperte a tecla corpo a corpo de novo para sair da postura."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Toque: postura, segurar: corpo a corpo rápido"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Toque: corpo a corpo rápido, segurar: postura"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Cada toque alterna a postura"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Corpo a corpo rápido, segurar + atirar: postura"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Tecla corpo a corpo com toque e segurar (obsoleto)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Obsoleto, lido uma vez ao iniciar para a migração. Substituído pelo modo da tecla corpo a corpo. Se estiver false e o modo ainda estiver no padrão, o próximo início muda o modo para \"Cada toque alterna a postura\" e volta este valor para true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Trocar corpo a corpo rápido e postura de combate"
+      "value": "Trocar corpo a corpo rápido e postura de combate (obsoleto)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Obsoleto, lido uma vez ao iniciar para a migração. Substituído pelo modo da tecla corpo a corpo. Se estiver true, o modo ainda estiver no padrão e a tecla com toque e segurar estiver ativada, o próximo início muda o modo para \"Toque: corpo a corpo rápido, segurar: postura\" e volta este valor para false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Usado apenas pelos dois modos de toque e segurar do modo da tecla corpo a corpo. Duração máxima de um toque. Um toque mais longo conta como segurar."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

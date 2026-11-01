@@ -30,6 +30,7 @@ namespace ToggleMeleeStance
         internal static ConfigEntry<bool> ResetMeleeAnimatorBeforeSheathe;
         internal static ConfigEntry<bool> DisableWhenMeleeExpansionDetected;
         internal static ConfigEntry<bool> KeepMeleeStanceAfterExternalWeaponSwitch;
+        internal static ConfigEntry<MeleeKeyMode> MeleeInputMode;
         internal static ConfigEntry<bool> EnableTapHoldMeleeKey;
         internal static ConfigEntry<bool> SwapQuickMeleeAndEquipMelee;
         internal static ConfigEntry<float> MeleeToggleTapThreshold;
@@ -157,18 +158,25 @@ namespace ToggleMeleeStance
                 "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
             );
 
+            MeleeInputMode = Config.Bind(
+                "Melee",
+                "MeleeInputMode",
+                MeleeKeyMode.TapToggleHoldQuickMelee,
+                "How the melee key works. TapToggleHoldQuickMelee (default): tap to toggle melee stance, hold for the original quick melee. TapQuickMeleeHoldToggle: tap for the original quick melee, hold to toggle melee stance. PressToggles: every press toggles melee stance, with no quick melee. QuickMeleeChordToggle: the melee key works as in the base game, and pressing Fire or the last used weapon key while holding it enters melee stance instead of attacking. In every mode, press the melee key again to leave melee stance."
+            );
+
             EnableTapHoldMeleeKey = Config.Bind(
                 "Melee",
                 "EnableTapHoldMeleeKey",
                 true,
-                "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+                "Deprecated, read once for migration. Replaced by MeleeInputMode. If this is false while MeleeInputMode is at its default, the next start sets MeleeInputMode to PressToggles and resets this entry to true."
             );
 
             SwapQuickMeleeAndEquipMelee = Config.Bind(
                 "Melee",
                 "SwapQuickMeleeAndEquipMelee",
                 false,
-                "Requires EnableTapHoldMeleeKey. Swaps the tap and hold melee actions. Default false: tap the melee key toggles melee stance, hold performs the original quick melee attack. When true: tap performs the original quick melee attack, hold toggles melee stance."
+                "Deprecated, read once for migration. Replaced by MeleeInputMode. If this is true while MeleeInputMode is at its default and EnableTapHoldMeleeKey is true, the next start sets MeleeInputMode to TapQuickMeleeHoldToggle and resets this entry to false."
             );
 
             MeleeToggleTapThreshold = Config.Bind(
@@ -176,7 +184,7 @@ namespace ToggleMeleeStance
                 "MeleeToggleTapThreshold",
                 0.13f,
                 new ConfigDescription(
-                    "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior.",
+                    "Used only by the TapToggleHoldQuickMelee and TapQuickMeleeHoldToggle input modes. Maximum press duration treated as a tap. A longer press counts as a hold.",
                     new AcceptableValueRange<float>(0.05f, 0.6f)
                 )
             );
@@ -194,6 +202,8 @@ namespace ToggleMeleeStance
                 false,
                 "Log toggle melee state changes. Keep false for normal gameplay."
             );
+
+            MigrateLegacyMeleeKeySettings();
 
 
             if (!InitializeReflection())
@@ -273,6 +283,62 @@ namespace ToggleMeleeStance
         private void OnDestroy()
         {
             harmony?.UnpatchSelf();
+        }
+
+        // Versions before MeleeInputMode chose the melee key behavior with two booleans. When an
+        // older config still sets one of them away from its default, it is carried over into
+        // MeleeInputMode, but only while MeleeInputMode is still at its own default: a mode the
+        // player picked is never overwritten. The booleans are then reset to their defaults in
+        // either case, so this runs once and a later return to the default mode stays as chosen.
+        private static void MigrateLegacyMeleeKeySettings()
+        {
+            bool tapHoldDisabled = !EnableTapHoldMeleeKey.Value;
+            bool swapped = SwapQuickMeleeAndEquipMelee.Value;
+
+            if (!tapHoldDisabled && !swapped)
+                return;
+
+            if (MeleeInputMode.Value == MeleeKeyMode.TapToggleHoldQuickMelee)
+            {
+                // The swap only ever applied with tap / hold enabled.
+                MeleeInputMode.Value = tapHoldDisabled
+                    ? MeleeKeyMode.PressToggles
+                    : MeleeKeyMode.TapQuickMeleeHoldToggle;
+
+                Log?.LogInfo(
+                    "Migrated EnableTapHoldMeleeKey=" + EnableTapHoldMeleeKey.Value +
+                    ", SwapQuickMeleeAndEquipMelee=" + SwapQuickMeleeAndEquipMelee.Value +
+                    " to MeleeInputMode=" + MeleeInputMode.Value + "."
+                );
+            }
+            else
+            {
+                Log?.LogInfo(
+                    "Ignored the deprecated EnableTapHoldMeleeKey / SwapQuickMeleeAndEquipMelee values " +
+                    "because MeleeInputMode is set (" + MeleeInputMode.Value + ")."
+                );
+            }
+
+            EnableTapHoldMeleeKey.Value = true;
+            SwapQuickMeleeAndEquipMelee.Value = false;
+        }
+
+        // The one place that decides the melee key behavior.
+        private static MeleeKeyMode GetMeleeKeyMode()
+        {
+            if (MeleeInputMode == null)
+                return MeleeKeyMode.TapToggleHoldQuickMelee;
+
+            switch (MeleeInputMode.Value)
+            {
+                case MeleeKeyMode.TapQuickMeleeHoldToggle:
+                case MeleeKeyMode.PressToggles:
+                case MeleeKeyMode.QuickMeleeChordToggle:
+                    return MeleeInputMode.Value;
+
+                default:
+                    return MeleeKeyMode.TapToggleHoldQuickMelee;
+            }
         }
 
         private static bool InitializeReflection()
@@ -772,6 +838,16 @@ namespace ToggleMeleeStance
             if (state.IsToggled)
                 state.LastMaintainTime = Time.time;
 
+            MeleeKeyMode mode = GetMeleeKeyMode();
+
+            // MeleeInputMode can change while the game runs (SULFUR Config applies it live). Tap /
+            // hold tracking from the previous mode must not decide a press in the new one.
+            if (state.AppliedMeleeKeyMode != mode)
+            {
+                state.AppliedMeleeKeyMode = mode;
+                ResetTapHoldTracking(state, holdingMeleeAction || IsMeleeHeld(__instance));
+            }
+
             if (state.SuppressMeleeUntilReleased)
             {
                 bool heldWhileSuppressed = holdingMeleeAction || IsMeleeHeld(__instance);
@@ -799,14 +875,18 @@ namespace ToggleMeleeStance
             if (!state.IsToggled && IsMeleeInputCoolingDown(__instance))
                 return true;
 
-            if (!state.IsToggled &&
-                EnableTapHoldMeleeKey != null &&
-                EnableTapHoldMeleeKey.Value)
+            if (!state.IsToggled && mode != MeleeKeyMode.PressToggles)
             {
+                // The melee key is left to the game: it charges on press and swings on release.
+                // Fire or the last used weapon key during that charge enters the stance (see
+                // TryEnterStanceFromChord).
+                if (mode == MeleeKeyMode.QuickMeleeChordToggle)
+                    return true;
+
                 bool prefixResult;
 
                 bool handled =
-                    SwapQuickMeleeAndEquipMelee != null && SwapQuickMeleeAndEquipMelee.Value
+                    mode == MeleeKeyMode.TapQuickMeleeHoldToggle
                         ? HandleTapHoldMeleeInputSwapped(__instance, state, holdingMeleeAction, out prefixResult)
                         : HandleTapHoldMeleeInput(__instance, state, holdingMeleeAction, out prefixResult);
 
@@ -849,12 +929,83 @@ namespace ToggleMeleeStance
             return true;
         }
 
+        // QuickMeleeChordToggle. The melee key works as in the base game: a press starts the quick
+        // melee charge (ChargeBasicMelee) and the release swings it (UseBasicMelee). Pressing Fire
+        // or the last used weapon key while that charge is held turns it into the stance instead,
+        // the same promotion the swapped tap / hold mode makes at its threshold. The base game does
+        // nothing with either input at that point: the melee weapon is drawn and
+        // weaponSwitchingPrevented is set. Returns true when the stance was entered; the caller
+        // then skips the game's method.
+        private static bool TryEnterStanceFromChord(object equipmentManager, string source)
+        {
+            if (!IsModActive() || equipmentManager == null)
+                return false;
+
+            if (GetMeleeKeyMode() != MeleeKeyMode.QuickMeleeChordToggle)
+                return false;
+
+            ToggleState state = GetState(equipmentManager);
+
+            if (state.IsToggled ||
+                state.AttackInProgress ||
+                state.SheatheAfterAttack ||
+                state.SuppressMeleeUntilReleased)
+            {
+                return false;
+            }
+
+            // Only while the game is running its equipment input update.
+            if (Time.time - state.LastEquipmentInputTime > StanceLivenessWindow)
+                return false;
+
+            // A quick melee charge that is still held. ChargeBasicMeleeRoutine sets meleePressed on
+            // the press frame and UseBasicMelee clears it when the swing is released, so a key
+            // pressed during the swing does not count. isInMeleeCharge is set one frame after the
+            // press, which also leaves out the press frame itself: the game reads Fire before the
+            // melee key in the same frame, so that Fire has already gone to the previous weapon.
+            if (!IsMeleeHeld(equipmentManager) ||
+                !GetBoolField(fMeleePressed, equipmentManager) ||
+                !IsInMeleeCharge(equipmentManager) ||
+                !IsBasicMeleeSlotSelected(equipmentManager))
+            {
+                return false;
+            }
+
+            object currentHoldable = GetCurrentHoldable(equipmentManager);
+
+            if (!IsMeleeWeapon(currentHoldable) || !IsMeleeCharging(currentHoldable))
+                return false;
+
+            if (LogStateChanges.Value)
+            {
+                Log?.LogInfo("Melee key held with " + source + ". Quick melee charge becomes melee stance.");
+            }
+
+            // ChargeBasicMelee inside ToggleOn does nothing here: the charge is already running.
+            ToggleOn(equipmentManager, state);
+            return true;
+        }
+
+        private static void ResetTapHoldTracking(ToggleState state, bool meleeHeld)
+        {
+            state.PendingTapHold = false;
+            state.LongPressPassThrough = false;
+            state.MeleePressStartTime = 0f;
+
+            // A press that is already in progress is not treated as a new one.
+            state.WasMeleeHeldLastFrame = meleeHeld;
+        }
+
         private static bool PullTriggerPrefix(object __instance)
         {
             if (!IsModActive())
                 return true;
 
             ToggleState state = GetState(__instance);
+
+            // QuickMeleeChordToggle: Fire during a quick melee charge enters the stance instead.
+            if (!state.IsToggled && TryEnterStanceFromChord(__instance, "Fire"))
+                return false;
 
             if (!state.IsToggled)
                 return true;
@@ -1151,6 +1302,10 @@ namespace ToggleMeleeStance
         // skipped (see HandleWeaponSelectionRequest).
         private static bool SelectLastUsedWeaponPrefix(object __instance)
         {
+            // QuickMeleeChordToggle: the key during a quick melee charge enters the stance instead.
+            if (TryEnterStanceFromChord(__instance, "last used weapon key"))
+                return false;
+
             return !HandleWeaponSelectionRequest(__instance, WeaponSelectionRequest.LastUsed, null, "last used weapon");
         }
 
@@ -2277,6 +2432,19 @@ namespace ToggleMeleeStance
             // attack has finished and the stance has sheathed (ReplayPendingWeaponSelection).
             public WeaponSelectionRequest PendingWeaponSelection;
             public object PendingWeaponSelectionSlot;
+
+            // The MeleeInputMode the tap / hold tracking above belongs to (see HandleMeleeInputPrefix).
+            public MeleeKeyMode? AppliedMeleeKeyMode;
+        }
+
+        // Values of the MeleeInputMode config entry. The names are stored in the config file, so
+        // they must not be renamed.
+        public enum MeleeKeyMode
+        {
+            TapToggleHoldQuickMelee,
+            TapQuickMeleeHoldToggle,
+            PressToggles,
+            QuickMeleeChordToggle
         }
 
         private enum WeaponSelectionRequest

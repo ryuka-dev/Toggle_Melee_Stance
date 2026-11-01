@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Tryb klawisza walki wręcz"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "Sposób działania klawisza walki wręcz. Domyślnie dotknięcie przełącza postawę walki wręcz, a przytrzymanie wykonuje oryginalny szybki atak wręcz. Można to odwrócić: dotknięcie to szybki atak, przytrzymanie przełącza postawę. Albo każde naciśnięcie przełącza postawę (bez szybkiego ataku). W ostatnim trybie klawisz działa jak w podstawowej grze, a naciśnięcie strzału lub klawisza ostatnio używanej broni podczas przytrzymania wchodzi w postawę walki wręcz zamiast atakować. W każdym trybie ponowne naciśnięcie klawisza walki wręcz kończy postawę."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Dotknięcie: postawa, przytrzymanie: szybki atak"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Dotknięcie: szybki atak, przytrzymanie: postawa"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Każde naciśnięcie przełącza postawę"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Szybki atak, przytrzymanie + strzał: postawa"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Klawisz walki wręcz: dotknięcie/przytrzymanie (przestarzałe)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Przestarzałe, odczytywane raz przy starcie w celu migracji. Zastąpione przez tryb klawisza walki wręcz. Jeśli ma wartość false, a tryb jest nadal domyślny, następny start ustawi tryb na „Każde naciśnięcie przełącza postawę” i przywróci tu wartość true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Zamień szybki atak wręcz i postawę walki wręcz"
+      "value": "Zamień szybki atak wręcz i postawę walki wręcz (przestarzałe)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Przestarzałe, odczytywane raz przy starcie w celu migracji. Zastąpione przez tryb klawisza walki wręcz. Jeśli ma wartość true, tryb jest nadal domyślny, a dotknięcie/przytrzymanie jest włączone, następny start ustawi tryb na „Dotknięcie: szybki atak, przytrzymanie: postawa” i przywróci tu wartość false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Używane tylko przez dwa tryby dotknięcia/przytrzymania w trybie klawisza walki wręcz. Najdłuższy czas naciśnięcia liczony jako dotknięcie. Dłuższe naciśnięcie liczy się jako przytrzymanie."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

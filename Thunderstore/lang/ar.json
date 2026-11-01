@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "وضع مفتاح القتال القريب"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "طريقة عمل مفتاح القتال القريب. افتراضيًا، النقرة تبدّل وضعية القتال القريب والضغط المطوّل ينفّذ الهجوم القريب السريع الأصلي. ويمكن العكس: النقرة للهجوم السريع والضغط المطوّل للوضعية. أو كل ضغطة تبدّل الوضعية (بدون هجوم سريع). في الوضع الأخير يعمل المفتاح كما في اللعبة الأصلية، والضغط على زر الإطلاق أو مفتاح آخر سلاح مستخدم أثناء الضغط عليه يدخلك في وضعية القتال القريب بدلًا من الهجوم. في كل الأوضاع، اضغط مفتاح القتال القريب مرة أخرى للخروج من الوضعية."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "نقرة: الوضعية، ضغط مطوّل: هجوم سريع"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "نقرة: هجوم سريع، ضغط مطوّل: الوضعية"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "كل ضغطة تبدّل الوضعية"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "هجوم سريع، ضغط مطوّل + إطلاق: الوضعية"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "النقر والضغط المطوّل لمفتاح القتال القريب (مُهمَل)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "مُهمَل، يُقرأ مرة واحدة عند التشغيل لنقل الإعداد. حلّ محله وضع مفتاح القتال القريب. إذا كانت القيمة false وكان الوضع لا يزال على الافتراضي، فإن التشغيل التالي يضبط الوضع على \"كل ضغطة تبدّل الوضعية\" ويعيد هذه القيمة إلى true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "تبديل الهجوم القريب السريع ووضعية القتال القريب"
+      "value": "تبديل الهجوم القريب السريع ووضعية القتال القريب (مُهمَل)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "مُهمَل، يُقرأ مرة واحدة عند التشغيل لنقل الإعداد. حلّ محله وضع مفتاح القتال القريب. إذا كانت القيمة true وكان الوضع لا يزال على الافتراضي وكان النقر والضغط المطوّل مفعّلًا، فإن التشغيل التالي يضبط الوضع على \"نقرة: هجوم سريع، ضغط مطوّل: الوضعية\" ويعيد هذه القيمة إلى false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "يُستخدم فقط في وضعَي النقر والضغط المطوّل من وضع مفتاح القتال القريب. أطول مدة ضغط تُحتسب نقرة. الضغط الأطول يُحتسب ضغطًا مطوّلًا."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

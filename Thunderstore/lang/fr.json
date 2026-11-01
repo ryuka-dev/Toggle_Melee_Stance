@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Mode de la touche de mêlée"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "Fonctionnement de la touche de mêlée. Par défaut, un appui court active ou désactive la posture de mêlée et un maintien fait la mêlée rapide d'origine. On peut aussi inverser : appui court pour la mêlée rapide, maintien pour la posture. Ou chaque appui active ou désactive la posture (sans mêlée rapide). Dans le dernier mode, la touche fonctionne comme dans le jeu de base, et appuyer sur Tirer ou sur la touche de la dernière arme utilisée pendant le maintien fait entrer en posture de mêlée au lieu d'attaquer. Dans tous les modes, un nouvel appui sur la touche de mêlée quitte la posture."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Appui court : posture, maintien : mêlée rapide"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Appui court : mêlée rapide, maintien : posture"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Chaque appui bascule la posture"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Mêlée rapide, maintien + tir : posture"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Touche de mêlée appui court / maintien (obsolète)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Obsolète, lu une seule fois au démarrage pour la migration. Remplacé par le mode de la touche de mêlée. Si cette valeur est false et que le mode est encore par défaut, le prochain démarrage règle le mode sur « Chaque appui bascule la posture » et remet cette valeur à true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Inverser mêlée rapide et posture de mêlée"
+      "value": "Inverser mêlée rapide et posture de mêlée (obsolète)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Obsolète, lu une seule fois au démarrage pour la migration. Remplacé par le mode de la touche de mêlée. Si cette valeur est true, que le mode est encore par défaut et que l'appui court / maintien est activé, le prochain démarrage règle le mode sur « Appui court : mêlée rapide, maintien : posture » et remet cette valeur à false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Utilisé uniquement par les deux modes appui court / maintien du mode de la touche de mêlée. Durée maximale d'un appui compté comme appui court. Un appui plus long compte comme un maintien."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

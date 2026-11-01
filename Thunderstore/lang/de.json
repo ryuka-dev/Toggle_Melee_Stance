@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Nahkampftasten-Modus"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "Legt fest, wie die Nahkampftaste funktioniert. Standard: Tippen schaltet die Nahkampfhaltung um, Halten nutzt den normalen schnellen Nahkampf. Umgekehrt geht auch: Tippen für schnellen Nahkampf, Halten für die Haltung. Oder jeder Druck schaltet die Haltung um (ohne schnellen Nahkampf). Im letzten Modus funktioniert die Nahkampftaste wie im Grundspiel, und wer beim Halten Feuern oder die Taste für die zuletzt benutzte Waffe drückt, geht in die Nahkampfhaltung, statt anzugreifen. In jedem Modus beendet ein weiterer Druck auf die Nahkampftaste die Haltung."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Tippen: Haltung, Halten: schneller Nahkampf"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Tippen: schneller Nahkampf, Halten: Haltung"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Jeder Druck schaltet die Haltung um"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Schneller Nahkampf, Halten + Feuern: Haltung"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Tippen/Halten der Nahkampftaste (veraltet)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Veraltet, wird beim Start einmal für die Migration gelesen. Ersetzt durch den Nahkampftasten-Modus. Steht dieser Wert auf false und der Modus noch auf dem Standard, setzt der nächste Start den Modus auf \"Jeder Druck schaltet die Haltung um\" und diesen Wert zurück auf true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Schnellen Nahkampf und Nahkampfhaltung tauschen"
+      "value": "Schnellen Nahkampf und Nahkampfhaltung tauschen (veraltet)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Veraltet, wird beim Start einmal für die Migration gelesen. Ersetzt durch den Nahkampftasten-Modus. Steht dieser Wert auf true, der Modus noch auf dem Standard und Tippen/Halten auf true, setzt der nächste Start den Modus auf \"Tippen: schneller Nahkampf, Halten: Haltung\" und diesen Wert zurück auf false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Wird nur von den beiden Tippen/Halten-Modi des Nahkampftasten-Modus verwendet. Längste Druckdauer, die als Tippen zählt. Ein längerer Druck zählt als Halten."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",

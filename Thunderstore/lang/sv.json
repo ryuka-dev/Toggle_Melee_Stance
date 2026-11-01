@@ -77,20 +77,44 @@
       "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
     },
     {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "Läge för närstridstangenten"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "Hur närstridstangenten fungerar. Som standard växlar ett kort tryck närstridsställningen och att hålla in gör den vanliga snabba närstriden. Det går också omvänt: kort tryck för snabb närstrid, håll in för ställningen. Eller så växlar varje tryck ställningen (utan snabb närstrid). I det sista läget fungerar tangenten som i grundspelet, och trycker du på Skjut eller tangenten för senast använda vapen medan du håller den går du in i närstridsställningen i stället för att attackera. I alla lägen avslutar ett nytt tryck på närstridstangenten ställningen."
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "Tryck: ställning, håll: snabb närstrid"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "Tryck: snabb närstrid, håll: ställning"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "Varje tryck växlar ställningen"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "Snabb närstrid, håll + skjut: ställning"
+    },
+    {
       "key": "entry.Melee.EnableTapHoldMeleeKey.name",
-      "value": "Enable Tap Hold Melee Key"
+      "value": "Tryck/håll för närstridstangenten (föråldrad)"
     },
     {
       "key": "entry.Melee.EnableTapHoldMeleeKey.description",
-      "value": "If true, tap the melee key to toggle melee stance, but hold the melee key to use the original melee behavior."
+      "value": "Föråldrad, läses en gång vid start för migrering. Ersatt av läget för närstridstangenten. Om värdet är false och läget fortfarande är standard sätter nästa start läget till \"Varje tryck växlar ställningen\" och återställer detta värde till true."
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
-      "value": "Växla snabb närstrid och närstridsställning"
+      "value": "Växla snabb närstrid och närstridsställning (föråldrad)"
     },
     {
       "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
-      "value": "Requires Enable Tap Hold Melee Key. Swaps the tap and hold melee actions. If false, tap toggles melee stance and hold performs the original quick melee attack. If true, tap performs the original quick melee attack and hold toggles melee stance."
+      "value": "Föråldrad, läses en gång vid start för migrering. Ersatt av läget för närstridstangenten. Om värdet är true, läget fortfarande är standard och tryck/håll är på sätter nästa start läget till \"Tryck: snabb närstrid, håll: ställning\" och återställer detta värde till false."
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.name",
@@ -98,7 +122,7 @@
     },
     {
       "key": "entry.Melee.MeleeToggleTapThreshold.description",
-      "value": "Maximum press duration treated as a tap for toggling melee stance. Holding longer uses original melee behavior."
+      "value": "Används bara av de två tryck/håll-lägena för närstridstangenten. Längsta tryck som räknas som ett kort tryck. Ett längre tryck räknas som att hålla in."
     },
     {
       "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
