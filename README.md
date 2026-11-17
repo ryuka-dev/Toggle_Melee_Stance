@@ -73,5 +73,12 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   (which the game reads before the melee key) never counts. `EnableTapHoldMeleeKey` and
   `SwapQuickMeleeAndEquipMelee` are read once in `Awake` by `MigrateLegacyMeleeKeySettings`
   and then reset to their defaults.
-- Target game version: SULFUR v0.18.5 (verified). All patched members are unchanged since
-  v0.17.4.
+- Stance lifetime: the state lives in a `ConditionalWeakTable` keyed by `EquipmentManager`. The
+  game destroys the player, and the `EquipmentManager` with it, on every level change and after
+  every death, and spawns a new one for the next level. An `OnDestroy` prefix drops the state,
+  and the public API treats a destroyed `EquipmentManager` as having no stance, so a caller holding
+  the old reference reads `false`. `ChangeWeapon(None)` keeps `currentHoldable` pointing at the
+  item it put away; `GetCurrentHoldable` returns `null` once that item is destroyed (the Hard
+  death penalty unequips the whole paperdoll). `MaintainToggledMelee` ends the stance once the
+  basic melee slot is empty.
+- Target game version: SULFUR 1.0.6 (verified in game, build 26490055).

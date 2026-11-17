@@ -104,6 +104,13 @@ namespace ToggleMeleeStance
         private static object consumableUseTypeValue;
         private static bool changeWeaponSignatureMatches;
 
+        // Optional: the end of an EquipmentManager's life. The game destroys the player, and the
+        // EquipmentManager with it, on every level change and after every death, and spawns a new
+        // one for the next level (see OnEquipmentManagerDestroyedPrefix).
+        private static MethodInfo mEquipmentManagerOnDestroy;
+
+        private static bool loggedAnimatorReadFailure;
+
         private static readonly ConditionalWeakTable<object, ToggleState> States =
             new ConditionalWeakTable<object, ToggleState>();
 
@@ -277,6 +284,21 @@ namespace ToggleMeleeStance
             PatchWeaponSelectionEntry(mNextWeapon, nameof(NextWeaponPrefix), "EquipmentManager.NextWeapon()");
             PatchWeaponSelectionEntry(mPreviousWeapon, nameof(PreviousWeaponPrefix), "EquipmentManager.PreviousWeapon(InventorySlot)");
             PatchWeaponSelectionEntry(mSelectLastUsedWeapon, nameof(SelectLastUsedWeaponPrefix), "EquipmentManager.SelectLastUsedWeapon()");
+
+            // Optional: drop the stance state of an EquipmentManager the game destroys (level
+            // change, death). The public API also treats a destroyed EquipmentManager as having no
+            // stance, so a caller that still holds the old one is covered without this hook.
+            if (mEquipmentManagerOnDestroy != null)
+            {
+                Patch(mEquipmentManagerOnDestroy, prefix: nameof(OnEquipmentManagerDestroyedPrefix));
+            }
+            else
+            {
+                Logger.LogWarning(
+                    "Could not resolve EquipmentManager.OnDestroy(). The stance state of a destroyed " +
+                    "player is released only when the game collects it."
+                );
+            }
 
             Logger.LogInfo("Toggle Melee Stance loaded.");
         }
@@ -489,6 +511,8 @@ namespace ToggleMeleeStance
             }
 
             ResolveWeaponSelectionMembers();
+
+            mEquipmentManagerOnDestroy = AccessTools.Method(equipmentManagerType, "OnDestroy", Type.EmptyTypes);
 
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
@@ -759,36 +783,40 @@ namespace ToggleMeleeStance
             }
         }
 
+        // The public API answers for live EquipmentManagers only. The game replaces the player, and
+        // its EquipmentManager, on every level change and after every death; a caller that kept the
+        // old one gets "no stance" rather than the state the old player had when it was destroyed.
+        // State is only looked up here, never created.
+        private static ToggleState FindLiveState(object equipmentManager)
+        {
+            if (equipmentManager == null || IsDestroyedUnityObject(equipmentManager) || !IsRuntimeReady || !IsModActive())
+                return null;
+
+            ToggleState state;
+            return States.TryGetValue(equipmentManager, out state) ? state : null;
+        }
+
         public static bool IsMeleeStanceActive(object equipmentManager)
         {
-            if (equipmentManager == null || !IsRuntimeReady || !IsModActive())
-                return false;
-
-            ToggleState state = GetState(equipmentManager);
+            ToggleState state = FindLiveState(equipmentManager);
             return state != null && state.IsToggled;
         }
 
         public static bool IsAttackInProgress(object equipmentManager)
         {
-            if (equipmentManager == null || !IsRuntimeReady || !IsModActive())
-                return false;
-
-            ToggleState state = GetState(equipmentManager);
+            ToggleState state = FindLiveState(equipmentManager);
             return state != null && state.AttackInProgress;
         }
 
         public static bool IsSheatheAfterAttack(object equipmentManager)
         {
-            if (equipmentManager == null || !IsRuntimeReady || !IsModActive())
-                return false;
-
-            ToggleState state = GetState(equipmentManager);
+            ToggleState state = FindLiveState(equipmentManager);
             return state != null && state.SheatheAfterAttack;
         }
 
         public static bool IsMeleeChargeActive(object equipmentManager)
         {
-            if (equipmentManager == null || !IsRuntimeReady || !IsModActive())
+            if (equipmentManager == null || IsDestroyedUnityObject(equipmentManager) || !IsRuntimeReady || !IsModActive())
                 return false;
 
             return IsInMeleeCharge(equipmentManager);
@@ -796,10 +824,39 @@ namespace ToggleMeleeStance
 
         public static object GetCurrentHoldableForExternal(object equipmentManager)
         {
-            if (equipmentManager == null || !IsRuntimeReady)
+            if (equipmentManager == null || IsDestroyedUnityObject(equipmentManager) || !IsRuntimeReady)
                 return null;
 
             return GetCurrentHoldable(equipmentManager);
+        }
+
+        // A Unity object whose native side is gone. The managed reference stays non-null and its
+        // fields stay readable, but every engine call on it (GetComponent, Animator) throws.
+        private static bool IsDestroyedUnityObject(object value)
+        {
+            UnityEngine.Object unityObject = value as UnityEngine.Object;
+            return !ReferenceEquals(unityObject, null) && unityObject == null;
+        }
+
+        // EquipmentManager.OnDestroy: the player is being torn down (level change or death). Its
+        // stance state ends with it. The next level's player has a new EquipmentManager, which
+        // starts without a stance.
+        private static void OnEquipmentManagerDestroyedPrefix(object __instance)
+        {
+            if (__instance == null)
+                return;
+
+            ToggleState state;
+
+            if (!States.TryGetValue(__instance, out state) || state == null)
+                return;
+
+            if (LogStateChanges != null && LogStateChanges.Value && (state.IsToggled || state.AttackInProgress || state.SheatheAfterAttack))
+            {
+                Log?.LogInfo("Player equipment destroyed (level change or death). Melee stance state cleared.");
+            }
+
+            States.Remove(__instance);
         }
 
         public static bool IsCurrentHoldableMeleeForExternal(object equipmentManager)
@@ -1892,6 +1949,15 @@ namespace ToggleMeleeStance
             if (state.AttackInProgress || state.SheatheAfterAttack)
                 return;
 
+            // The stance cannot outlive the basic melee weapon. Once it is unequipped (the death
+            // penalty on Hard, or the player taking it off in the inventory) ChargeBasicMelee
+            // refuses forever, and the stance would stay on with nothing to hold.
+            if (IsBasicMeleeSlotEmpty(equipmentManager))
+            {
+                EndStanceWithoutBasicMeleeWeapon(equipmentManager, state);
+                return;
+            }
+
             bool altHeld = IsAltFirePressed(equipmentManager);
 
             SetAlternativeMeleePressed(equipmentManager, altHeld);
@@ -1907,6 +1973,46 @@ namespace ToggleMeleeStance
 
             InvokeChargeBasicMelee(equipmentManager);
             SetMeleePressed(equipmentManager, true);
+        }
+
+        // False when the equipped items cannot be read, so a game without that member keeps the
+        // previous behavior.
+        private static bool IsBasicMeleeSlotEmpty(object equipmentManager)
+        {
+            if (fEquippedItems == null || basicMeleeSlotValue == null || equipmentManager == null)
+                return false;
+
+            System.Collections.IDictionary items = fEquippedItems.GetValue(equipmentManager) as System.Collections.IDictionary;
+
+            return items != null && !items.Contains(basicMeleeSlotValue);
+        }
+
+        // Ends the stance when the basic melee slot is empty: its weapon was unequipped, or the stance
+        // was entered with no basic melee weapon at all. The game is not holding that slot
+        // (UnEquipFromSlot does a forced ChangeWeapon), so only the stance state is cleared and
+        // nothing is invoked on the game. The stance is not remembered as the last used item: there
+        // is no melee weapon to go back to.
+        private static void EndStanceWithoutBasicMeleeWeapon(object equipmentManager, ToggleState state)
+        {
+            state.IsToggled = false;
+            state.AttackInProgress = false;
+            state.SheatheAfterAttack = false;
+            state.SuppressMeleeUntilReleased = false;
+            state.NextChargeAttemptTime = 0f;
+
+            // A melee key that is still held is not a new press. Otherwise a hold mode would enter
+            // the stance again at its threshold and end it here, over and over, while the key is held.
+            ResetTapHoldTracking(state, IsMeleeHeld(equipmentManager));
+            ClearPendingWeaponSelection(state);
+            ClearStanceAsLastUsed(state);
+
+            SetMeleePressed(equipmentManager, false);
+            SetAlternativeMeleePressed(equipmentManager, false);
+
+            if (LogStateChanges != null && LogStateChanges.Value)
+            {
+                Log?.LogInfo("No basic melee weapon is equipped while melee stance is on. Toggle melee OFF.");
+            }
         }
 
         private static void CacheSafeMeleeAnimatorStateIfUseful(
@@ -2398,7 +2504,16 @@ namespace ToggleMeleeStance
             if (fCurrentHoldable == null || equipmentManager == null)
                 return null;
 
-            return fCurrentHoldable.GetValue(equipmentManager);
+            object holdable = fCurrentHoldable.GetValue(equipmentManager);
+
+            // ChangeWeapon(None) keeps currentHoldable pointing at the item it put away. When that
+            // item is then destroyed (unequipped, for example by the death penalty on Hard, which
+            // empties the paperdoll), the field still points at the destroyed object. Nothing is
+            // held in that case.
+            if (IsDestroyedUnityObject(holdable))
+                return null;
+
+            return holdable;
         }
 
         private static object GetEquipmentManagerFromWeapon(object weapon)
@@ -2510,10 +2625,25 @@ namespace ToggleMeleeStance
 
         private static Animator GetAnimator(object holdable)
         {
-            if (holdable == null || pAnimator == null)
+            if (holdable == null || pAnimator == null || IsDestroyedUnityObject(holdable))
                 return null;
 
-            return pAnimator.GetValue(holdable, null) as Animator;
+            // Holdable.Animator calls GetComponent the first time it is read. One failed read must
+            // not turn into an exception on every frame of the stance.
+            try
+            {
+                return pAnimator.GetValue(holdable, null) as Animator;
+            }
+            catch (TargetInvocationException ex)
+            {
+                if (!loggedAnimatorReadFailure)
+                {
+                    loggedAnimatorReadFailure = true;
+                    Log?.LogWarning("Could not read the held weapon's Animator. Further failures are not logged. " + ex.InnerException);
+                }
+
+                return null;
+            }
         }
 
         private static void InvokeChargeBasicMelee(object equipmentManager)

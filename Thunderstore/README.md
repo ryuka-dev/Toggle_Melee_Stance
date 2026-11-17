@@ -134,6 +134,8 @@ IsCurrentHoldableMeleeForExternal(object equipmentManager)
 
 These are intended for mods such as The Dragonblade to check whether melee stance is active without patching the same melee input methods again.
 
+The game creates a new player, with a new `EquipmentManager`, for every level and after every death. The methods answer `false` (or `null`) for an `EquipmentManager` that has been destroyed, so always pass the current one. `GetCurrentHoldableForExternal` also returns `null` when the item the game last held has been destroyed (for example after the death penalty unequips it).
+
 ## Configuration
 
 Config file:
