@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+- New `HideAmmoCounterInMeleeStance` option, off by default. The base game leaves the last gun's ammo counter on screen, frozen, while you hold a melee weapon. Turn it on to hide the counter during melee stance. It comes back when the stance ends. Handy with The Dragonblade, whose dash HUD sits in the same corner.
+- Fixed The Dragonblade's dash HUD showing up over your gun after you changed levels or died in melee stance.
+- Fixed an error repeating every frame after dying in melee stance on Hard. The stance now ends if your melee weapon gets unequipped.
+- Added Traditional Chinese to the SULFUR Config translations.
+- Verified on SULFUR 1.0.6.
+
 ## 1.6.0
 
 - New `MeleeInputMode` setting. If telling a tap from a hold feels finicky, try `QuickMeleeChordToggle`: the melee key always does the vanilla quick melee, and holding it while pressing Fire or the last used weapon key enters melee stance, so there's no timing to get right. Thanks to the player who suggested it on GitHub.

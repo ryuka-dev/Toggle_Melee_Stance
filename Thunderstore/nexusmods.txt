@@ -121,6 +121,8 @@ GetCurrentHoldableForExternal(object equipmentManager)
 IsCurrentHoldableMeleeForExternal(object equipmentManager)[/code]
 These are intended for mods such as The Dragonblade to check whether melee stance is active without patching the same melee input methods again.
 
+The game creates a new player, with a new [color=#ffff00]EquipmentManager[/color], for every level and after every death. The methods answer [color=#ffff00]false[/color] (or [color=#ffff00]null[/color]) for an [color=#ffff00]EquipmentManager[/color] that has been destroyed, so always pass the current one. [color=#ffff00]GetCurrentHoldableForExternal[/color] also returns [color=#ffff00]null[/color] when the held item has been destroyed, for example after the death penalty unequips it.
+
 [color=RoyalBlue][b]Configuration[/b][/color]
 
 Config file:
@@ -143,6 +145,7 @@ WeaponSwitchExitsMeleeStance = true
 
 [Visual]
 ResetMeleeAnimatorBeforeSheathe = true
+HideAmmoCounterInMeleeStance = false
 
 [Compatibility]
 DisableWhenMeleeExpansionDetected = false
@@ -210,6 +213,10 @@ false
 [color=#ffff00]ResetMeleeAnimatorBeforeSheathe[/color]
 
 Keeps repeated melee draws visually stable by resetting the melee Animator to a cached safe equip state before sheathing.
+
+[color=#ffff00]HideAmmoCounterInMeleeStance[/color]
+
+Hides the gun's ammo counter while melee stance is on. The base game leaves the last gun's counter on screen, frozen, while a melee weapon is held, and it can cover other HUD in that corner, like The Dragonblade's dash HUD. The counter comes back when the stance ends. Off by default.
 
 [color=#ffff00]DisableWhenMeleeExpansionDetected[/color]
 
@@ -289,6 +296,7 @@ Supported SULFUR Config languages:
 [list]
 [*]English[/*]
 [*]Simplified Chinese[/*]
+[*]Traditional Chinese[/*]
 [*]Swedish[/*]
 [*]French[/*]
 [*]Italian[/*]
@@ -304,6 +312,15 @@ Supported SULFUR Config languages:
 [/list]
 [font=Arial Black][color=DarkOrange][size=5][b]Changelog[/b][/size][/color][/font]
 
+[color=RoyalBlue][b]1.7.0[/b][/color]
+
+[list]
+[*]New [color=#ffff00]HideAmmoCounterInMeleeStance[/color] option, off by default. The base game leaves the last gun's ammo counter on screen, frozen, while you hold a melee weapon. Turn it on to hide the counter during melee stance. It comes back when the stance ends. Handy with The Dragonblade, whose dash HUD sits in the same corner.[/*]
+[*]Fixed The Dragonblade's dash HUD showing up over your gun after you changed levels or died in melee stance.[/*]
+[*]Fixed an error repeating every frame after dying in melee stance on Hard. The stance now ends if your melee weapon gets unequipped.[/*]
+[*]Added Traditional Chinese to the SULFUR Config translations.[/*]
+[*]Verified on SULFUR 1.0.6.[/*]
+[/list]
 [color=RoyalBlue][b]1.6.0[/b][/color]
 
 [list]
