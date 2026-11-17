@@ -61,6 +61,14 @@
       "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
     },
     {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "近战姿态时隐藏弹药计数"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "近战姿态开启时隐藏枪械的弹药计数。原版在手持近战武器时会把上一把枪的弹药计数留在屏幕上，且不再更新。姿态结束后计数会重新显示。"
+    },
+    {
       "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
       "value": "禁用当近战Expansion检测到"
     },

@@ -162,6 +162,7 @@ WeaponSwitchExitsMeleeStance = true
 
 [Visual]
 ResetMeleeAnimatorBeforeSheathe = true
+HideAmmoCounterInMeleeStance = false
 
 [Compatibility]
 DisableWhenMeleeExpansionDetected = false
@@ -237,6 +238,10 @@ false
 `ResetMeleeAnimatorBeforeSheathe`
 
 Keeps repeated melee draws visually stable by resetting the melee Animator to a cached safe equip state before sheathing.
+
+`HideAmmoCounterInMeleeStance`
+
+Hides the gun's ammo counter while melee stance is on. The base game leaves the last gun's counter on screen, frozen, while a melee weapon is held, which can overlap other HUD elements in that corner (such as The Dragonblade's dash HUD). The counter comes back when the stance ends. Off by default.
 
 `DisableWhenMeleeExpansionDetected`
 

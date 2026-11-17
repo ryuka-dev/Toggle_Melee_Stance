@@ -61,6 +61,14 @@
       "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
     },
     {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "Munitionsanzeige in Nahkampfhaltung ausblenden"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "Blendet die Munitionsanzeige der Waffe aus, solange die Nahkampfhaltung aktiv ist. Im Grundspiel bleibt die Anzeige der letzten Schusswaffe eingefroren auf dem Bildschirm, während eine Nahkampfwaffe gehalten wird. Sie erscheint wieder, wenn die Haltung endet."
+    },
+    {
       "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
       "value": "Disable When Melee Expansion Detected"
     },

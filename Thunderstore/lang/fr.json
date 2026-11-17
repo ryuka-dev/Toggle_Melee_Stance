@@ -61,6 +61,14 @@
       "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
     },
     {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "Masquer le compteur de munitions en posture de mêlée"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "Masque le compteur de munitions de l'arme tant que la posture de mêlée est active. Dans le jeu de base, le compteur de la dernière arme à feu reste figé à l'écran pendant qu'une arme de mêlée est en main. Il réapparaît quand la posture prend fin."
+    },
+    {
       "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
       "value": "Disable When Melee Expansion Detected"
     },

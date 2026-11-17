@@ -36,6 +36,7 @@ namespace ToggleMeleeStance
         internal static ConfigEntry<float> MeleeToggleTapThreshold;
         internal static ConfigEntry<bool> WeaponSwitchExitsMeleeStance;
         internal static ConfigEntry<float> ReChargeRetryInterval;
+        internal static ConfigEntry<bool> HideAmmoCounterInMeleeStance;
         internal static ConfigEntry<bool> LogStateChanges;
 
         private Harmony harmony;
@@ -109,7 +110,16 @@ namespace ToggleMeleeStance
         // one for the next level (see OnEquipmentManagerDestroyedPrefix).
         private static MethodInfo mEquipmentManagerOnDestroy;
 
+        // Optional members for hiding the gun's ammo counter while the stance holds the melee
+        // weapon (see PlayerHudManualUpdatePostfix). A missing member disables only that option.
+        private static MethodInfo mPlayerHudManualUpdate;
+        private static FieldInfo fHudPlayer;
+        private static FieldInfo fPlayerEquipmentManager;
+        private static FieldInfo fHudLastActiveWeapon;
+        private static FieldInfo fHudLastActiveAmmoCounter;
+        private static object itemIdNoneValue;
         private static bool loggedAnimatorReadFailure;
+        private static bool loggedAmmoCounterFailure;
 
         private static readonly ConditionalWeakTable<object, ToggleState> States =
             new ConditionalWeakTable<object, ToggleState>();
@@ -150,6 +160,13 @@ namespace ToggleMeleeStance
                 "ResetMeleeAnimatorBeforeSheathe",
                 true,
                 "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
+            );
+
+            HideAmmoCounterInMeleeStance = Config.Bind(
+                "Visual",
+                "HideAmmoCounterInMeleeStance",
+                false,
+                "Hide the gun's ammo counter while melee stance is on. The base game leaves the counter of the last gun on screen, frozen, while a melee weapon is held. It comes back when the stance ends."
             );
 
             DisableWhenMeleeExpansionDetected = Config.Bind(
@@ -297,6 +314,20 @@ namespace ToggleMeleeStance
                 Logger.LogWarning(
                     "Could not resolve EquipmentManager.OnDestroy(). The stance state of a destroyed " +
                     "player is released only when the game collects it."
+                );
+            }
+
+            // Optional: HideAmmoCounterInMeleeStance. Patched whenever it resolves, so the option
+            // can be turned on while the game runs; the postfix returns at once while it is off.
+            if (IsAmmoCounterHidingResolved())
+            {
+                Patch(mPlayerHudManualUpdate, postfix: nameof(PlayerHudManualUpdatePostfix));
+            }
+            else
+            {
+                Logger.LogWarning(
+                    "HideAmmoCounterInMeleeStance is unavailable: could not resolve PlayerHUD.ManualUpdate() " +
+                    "or the ammo counter members it needs."
                 );
             }
 
@@ -514,6 +545,8 @@ namespace ToggleMeleeStance
 
             mEquipmentManagerOnDestroy = AccessTools.Method(equipmentManagerType, "OnDestroy", Type.EmptyTypes);
 
+            ResolveAmmoCounterMembers();
+
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
                    Require(mPullTrigger, "EquipmentManager.PullTrigger()") &&
@@ -632,6 +665,51 @@ namespace ToggleMeleeStance
 
             if (pInventoryItemUseType != null && pInventoryItemUseType.PropertyType.IsEnum)
                 consumableUseTypeValue = ParseEnumOrNull(pInventoryItemUseType.PropertyType, "Consumable");
+        }
+
+        // PlayerHUD.ManualUpdate only touches the ammo counter while the held item is not a melee
+        // weapon in a charge or a swing, and turns a counter on only when _lastActiveWeapon changes.
+        // Hiding the counter therefore needs the counter itself and _lastActiveWeapon, so that the
+        // game turns the counter back on by itself once the stance ends.
+        private static void ResolveAmmoCounterMembers()
+        {
+            Type playerHudType = AccessTools.TypeByName("PerfectRandom.Sulfur.Gameplay.PlayerHUD");
+
+            if (playerHudType == null)
+                return;
+
+            mPlayerHudManualUpdate = AccessTools.Method(playerHudType, "ManualUpdate", Type.EmptyTypes);
+            fHudPlayer = AccessTools.Field(playerHudType, "player");
+            fHudLastActiveWeapon = AccessTools.Field(playerHudType, "_lastActiveWeapon");
+            fHudLastActiveAmmoCounter = AccessTools.Field(playerHudType, "_lastActiveAmmoCounter");
+
+            if (fHudPlayer != null)
+                fPlayerEquipmentManager = AccessTools.Field(fHudPlayer.FieldType, "equipmentManager");
+
+            if (fPlayerEquipmentManager != null && !equipmentManagerType.IsAssignableFrom(fPlayerEquipmentManager.FieldType))
+                fPlayerEquipmentManager = null;
+
+            if (fHudLastActiveAmmoCounter != null && !typeof(Component).IsAssignableFrom(fHudLastActiveAmmoCounter.FieldType))
+                fHudLastActiveAmmoCounter = null;
+
+            // ItemId is a struct with a static readonly None.
+            if (fHudLastActiveWeapon != null)
+            {
+                FieldInfo noneField = AccessTools.Field(fHudLastActiveWeapon.FieldType, "None");
+
+                if (noneField != null && noneField.IsStatic && noneField.FieldType == fHudLastActiveWeapon.FieldType)
+                    itemIdNoneValue = noneField.GetValue(null);
+            }
+        }
+
+        private static bool IsAmmoCounterHidingResolved()
+        {
+            return mPlayerHudManualUpdate != null &&
+                   fHudPlayer != null &&
+                   fPlayerEquipmentManager != null &&
+                   fHudLastActiveWeapon != null &&
+                   fHudLastActiveAmmoCounter != null &&
+                   itemIdNoneValue != null;
         }
 
         private static object ParseEnumOrNull(Type enumType, string name)
@@ -2013,6 +2091,66 @@ namespace ToggleMeleeStance
             {
                 Log?.LogInfo("No basic melee weapon is equipped while melee stance is on. Toggle melee OFF.");
             }
+        }
+
+        // PlayerHUD.ManualUpdate, for HideAmmoCounterInMeleeStance. While the stance holds the melee
+        // weapon the game leaves the last gun's counter on screen and stops updating it. The postfix
+        // turns the counter off and sets _lastActiveWeapon to None. Once a gun is in hand outside a
+        // melee charge again, the game sees a weapon change and turns the counter back on itself.
+        // That also happens between two charges of the stance, inside the same ManualUpdate, before
+        // this postfix hides it again, so the counter does not flicker.
+        // The game runs ManualUpdate from ProjectileSystem while its projectile job is still running
+        // and completes the job right after, so an exception from here must not escape.
+        private static void PlayerHudManualUpdatePostfix(object __instance)
+        {
+            if (HideAmmoCounterInMeleeStance == null || !HideAmmoCounterInMeleeStance.Value || !IsModActive())
+                return;
+
+            try
+            {
+                HideAmmoCounterWhileStanceHoldsMelee(__instance);
+            }
+            catch (Exception ex)
+            {
+                if (!loggedAmmoCounterFailure)
+                {
+                    loggedAmmoCounterFailure = true;
+                    Log?.LogError("Failed to hide the ammo counter in melee stance. Further failures are not logged. " + ex);
+                }
+            }
+        }
+
+        private static void HideAmmoCounterWhileStanceHoldsMelee(object hud)
+        {
+            object player = fHudPlayer.GetValue(hud);
+
+            if (player == null || IsDestroyedUnityObject(player))
+                return;
+
+            object equipmentManager = fPlayerEquipmentManager.GetValue(player);
+
+            if (equipmentManager == null || IsDestroyedUnityObject(equipmentManager))
+                return;
+
+            ToggleState state;
+
+            if (!States.TryGetValue(equipmentManager, out state) || state == null)
+                return;
+
+            if (!state.IsToggled && !state.AttackInProgress && !state.SheatheAfterAttack)
+                return;
+
+            Component counter = fHudLastActiveAmmoCounter.GetValue(hud) as Component;
+
+            if (counter == null)
+                return;
+
+            GameObject counterObject = counter.gameObject;
+
+            if (counterObject.activeSelf)
+                counterObject.SetActive(false);
+
+            fHudLastActiveWeapon.SetValue(hud, itemIdNoneValue);
         }
 
         private static void CacheSafeMeleeAnimatorStateIfUseful(

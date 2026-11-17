@@ -61,6 +61,14 @@
       "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
     },
     {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "近接構え中は弾数表示を隠す"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "近接構えがオンの間、銃の弾数表示を隠します。通常のゲームでは近接武器を持っている間も、最後に使った銃の弾数表示が更新されないまま画面に残ります。構えを解除すると再び表示されます。"
+    },
+    {
       "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
       "value": "無効化時近接Expansion検出時"
     },

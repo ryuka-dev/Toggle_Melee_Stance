@@ -81,4 +81,8 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   item it put away; `GetCurrentHoldable` returns `null` once that item is destroyed (the Hard
   death penalty unequips the whole paperdoll). `MaintainToggledMelee` ends the stance once the
   basic melee slot is empty.
+- `HideAmmoCounterInMeleeStance`: `PlayerHUD.ManualUpdate` skips its ammo counter block while a
+  melee weapon is held in a charge or swing, and turns a counter on only when `_lastActiveWeapon`
+  changes. A postfix turns `_lastActiveAmmoCounter` off and sets `_lastActiveWeapon` to
+  `ItemId.None`, so the game turns the counter back on by itself when a gun is held again.
 - Target game version: SULFUR 1.0.6 (verified in game, build 26490055).

@@ -61,6 +61,14 @@
       "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
     },
     {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "إخفاء عداد الذخيرة في وضعية القتال القريب"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "يخفي عداد ذخيرة السلاح أثناء تفعيل وضعية القتال القريب. في اللعبة الأساسية يبقى عداد آخر سلاح ناري متجمدًا على الشاشة أثناء حمل سلاح قريب. يعود للظهور عند انتهاء الوضعية."
+    },
+    {
       "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
       "value": "Disable When Melee Expansion Detected"
     },
