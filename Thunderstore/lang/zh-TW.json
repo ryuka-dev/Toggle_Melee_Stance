@@ -1,0 +1,152 @@
+{
+  "entries": [
+    {
+      "key": "plugin.name",
+      "value": "近戰架勢切換"
+    },
+    {
+      "key": "plugin.description",
+      "value": "將近戰鍵改為可設定的切換／點按長按近戰架勢模組。"
+    },
+    {
+      "key": "section.General",
+      "value": "一般"
+    },
+    {
+      "key": "section.Melee",
+      "value": "近戰"
+    },
+    {
+      "key": "section.Visual",
+      "value": "視覺"
+    },
+    {
+      "key": "section.Compatibility",
+      "value": "相容性"
+    },
+    {
+      "key": "section.Debug",
+      "value": "除錯"
+    },
+    {
+      "key": "entry.General.EnableMod.name",
+      "value": "啟用模組"
+    },
+    {
+      "key": "entry.General.EnableMod.description",
+      "value": "Enable Toggle Melee Stance."
+    },
+    {
+      "key": "entry.Melee.FirePerformsMeleeAttack.name",
+      "value": "開火時進行近戰攻擊"
+    },
+    {
+      "key": "entry.Melee.FirePerformsMeleeAttack.description",
+      "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
+    },
+    {
+      "key": "entry.Melee.ReChargeRetryInterval.name",
+      "value": "重新蓄力重試間隔"
+    },
+    {
+      "key": "entry.Melee.ReChargeRetryInterval.description",
+      "value": "Seconds between retry attempts when the mod tries to re-enter melee charge after an attack."
+    },
+    {
+      "key": "entry.Visual.ResetMeleeAnimatorBeforeSheathe.name",
+      "value": "收刀前重設近戰動畫"
+    },
+    {
+      "key": "entry.Visual.ResetMeleeAnimatorBeforeSheathe.description",
+      "value": "Before sheathing a toggled melee weapon, reset its Animator to the cached safe equip state. This prevents stale idle states from causing a slash-frame flash on the next draw."
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.name",
+      "value": "近戰架勢時隱藏彈藥計數"
+    },
+    {
+      "key": "entry.Visual.HideAmmoCounterInMeleeStance.description",
+      "value": "近戰架勢開啟時隱藏槍械的彈藥計數。原版在手持近戰武器時，會把上一把槍的彈藥計數留在畫面上且不再更新。架勢結束後計數會重新顯示。"
+    },
+    {
+      "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.name",
+      "value": "偵測到龍刃時停用"
+    },
+    {
+      "key": "entry.Compatibility.DisableWhenMeleeExpansionDetected.description",
+      "value": "Deprecated. Kept only for old config compatibility. Toggle Melee Stance no longer auto-disables when The Dragonblade is installed, because it is now the shared prerequisite melee stance module."
+    },
+    {
+      "key": "entry.Compatibility.KeepMeleeStanceAfterExternalWeaponSwitch.name",
+      "value": "外部切換武器後保持近戰架勢"
+    },
+    {
+      "key": "entry.Compatibility.KeepMeleeStanceAfterExternalWeaponSwitch.description",
+      "value": "When another mod changes the current weapon while toggle melee stance is active, keep melee stance instead of exiting it. Default false: exit stance and allow the new weapon to fire normally."
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.name",
+      "value": "近戰鍵模式"
+    },
+    {
+      "key": "entry.Melee.MeleeInputMode.description",
+      "value": "近戰鍵的操作方式。預設是點按切換近戰架勢、長按使用原版快速近戰。也可以反過來：點按使用快速近戰、長按切換架勢。還可以每按一次就切換一次架勢（不再有快速近戰）。最後一種模式讓近戰鍵和原版完全一致：按住近戰鍵時按下開火或「選擇上次使用的」鍵，就會進入近戰架勢而不是揮砍。任何模式下，再按一次近戰鍵都會退出近戰架勢。"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapToggleHoldQuickMelee",
+      "value": "點按：架勢，長按：快速近戰"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.TapQuickMeleeHoldToggle",
+      "value": "點按：快速近戰，長按：架勢"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.PressToggles",
+      "value": "每次按下切換架勢"
+    },
+    {
+      "key": "value.Melee.MeleeInputMode.QuickMeleeChordToggle",
+      "value": "原版快速近戰，按住 + 開火：架勢"
+    },
+    {
+      "key": "entry.Melee.EnableTapHoldMeleeKey.name",
+      "value": "啟用點按長按近戰鍵（已棄用）"
+    },
+    {
+      "key": "entry.Melee.EnableTapHoldMeleeKey.description",
+      "value": "已棄用，只在啟動時讀取一次用於遷移，已由「近戰鍵模式」取代。如果此項為 false 且近戰鍵模式仍是預設值，下次啟動時會把近戰鍵模式設為「每次按下切換架勢」，並把此項重設為 true。"
+    },
+    {
+      "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.name",
+      "value": "交換快速近戰與近戰架勢（已棄用）"
+    },
+    {
+      "key": "entry.Melee.SwapQuickMeleeAndEquipMelee.description",
+      "value": "已棄用，只在啟動時讀取一次用於遷移，已由「近戰鍵模式」取代。如果此項為 true、近戰鍵模式仍是預設值且「啟用點按長按近戰鍵」為 true，下次啟動時會把近戰鍵模式設為「點按：快速近戰，長按：架勢」，並把此項重設為 false。"
+    },
+    {
+      "key": "entry.Melee.MeleeToggleTapThreshold.name",
+      "value": "近戰切換點按門檻"
+    },
+    {
+      "key": "entry.Melee.MeleeToggleTapThreshold.description",
+      "value": "只用於近戰鍵模式中的兩種點按／長按模式。按下時間不超過此值算作點按，更長則算作長按。"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.name",
+      "value": "切換武器時退出近戰架勢"
+    },
+    {
+      "key": "entry.Melee.WeaponSwitchExitsMeleeStance.description",
+      "value": "近戰架勢開啟時，選擇武器的操作會退出架勢。武器欄位鍵（預設 1-5）會切換到對應欄位；「選擇上次使用的」鍵，以及用滑鼠滾輪或手把方向鍵切換武器，會回到進入架勢前手持的武器。無論以何種方式退出架勢，之後按「選擇上次使用的」鍵都會回到近戰架勢，直到你切換到其他武器為止。在近戰攻擊中選擇的欄位會在攻擊結束後切換。3-5 號欄位中的消耗品會直接使用，不會退出近戰架勢。"
+    },
+    {
+      "key": "entry.Debug.LogStateChanges.name",
+      "value": "記錄狀態變化"
+    },
+    {
+      "key": "entry.Debug.LogStateChanges.description",
+      "value": "Log toggle melee state changes. Keep false for normal gameplay."
+    }
+  ]
+}

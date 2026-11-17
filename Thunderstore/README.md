@@ -330,6 +330,7 @@ Supported SULFUR Config languages:
 
 - English
 - Simplified Chinese
+- Traditional Chinese
 - Swedish
 - French
 - Italian
