@@ -166,7 +166,7 @@ namespace ToggleMeleeStance
                 "Visual",
                 "HideAmmoCounterInMeleeStance",
                 false,
-                "Hide the gun's ammo counter while melee stance is on. The base game leaves the counter of the last gun on screen, frozen, while a melee weapon is held. It comes back when the stance ends."
+                "Hide the gun's ammo counter while melee stance is on. The base game leaves the last gun's counter on screen, frozen, while a melee weapon is held. The counter comes back when the stance ends."
             );
 
             DisableWhenMeleeExpansionDetected = Config.Bind(
