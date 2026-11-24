@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0
+
+- New `HoldFireToRepeatMeleeAttack` option, off by default. Turn it on and you can hold Fire in melee stance to keep attacking, like an automatic weapon, instead of pressing Fire for every swing. It doesn't attack faster than pressing quickly would. Only a Fire press made in the stance starts it, so Fire still held from your gun doesn't swing the moment the stance begins. Thanks to the player who asked for it.
+- Verified on SULFUR 1.0.6.
+
 ## 1.7.0
 
 - New `HideAmmoCounterInMeleeStance` option, off by default. The base game leaves the last gun's ammo counter on screen, frozen, while you hold a melee weapon. Turn it on to hide the counter during melee stance. It comes back when the stance ends. Handy with The Dragonblade, whose dash HUD sits in the same corner.
