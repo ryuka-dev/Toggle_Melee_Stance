@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "射撃長押しで近接攻撃を連続"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "「射撃実行近接攻撃」が必要です。近接構え中に射撃を押し続けると攻撃を続けます。武器の準備ができ次第、次の攻撃が始まります。連続攻撃は近接構え中に押した射撃からのみ始まるため、銃を持っていた時から射撃を押したまま構えに入っても、押し直すまで攻撃しません。"
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "再チャージ再試行間隔"
     },

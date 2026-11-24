@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Tieni premuto Fuoco per ripetere l'attacco in mischia"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Richiede FirePerformsMeleeAttack. Nella postura da mischia, tenere premuto Fuoco continua ad attaccare: l'attacco successivo inizia appena l'arma è di nuovo pronta. La ripetizione parte solo da una pressione di Fuoco fatta nella postura, quindi se Fuoco è già premuto con l'arma da fuoco quando la postura inizia, non attacca finché non lo premi di nuovo."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

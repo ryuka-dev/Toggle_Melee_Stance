@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Maintenir Tir pour répéter l'attaque de mêlée"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Nécessite FirePerformsMeleeAttack. En posture de mêlée, maintenir Tir enchaîne les attaques : la suivante commence dès que l'arme est de nouveau prête. La répétition ne démarre que sur un appui sur Tir fait en posture de mêlée : si Tir est déjà maintenu avec l'arme à feu quand la posture commence, aucune attaque n'a lieu avant un nouvel appui."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Удержание огня повторяет атаку ближнего боя"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Требует FirePerformsMeleeAttack. В стойке ближнего боя удержание кнопки огня продолжает атаки: следующая атака начинается, как только оружие снова готово. Повтор начинается только с нажатия огня в стойке, поэтому если огонь уже удерживается с огнестрельным оружием в момент начала стойки, атаки не будет до повторного нажатия."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

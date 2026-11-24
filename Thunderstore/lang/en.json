@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Hold Fire To Repeat Melee Attack"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Requires FirePerformsMeleeAttack. Hold Fire in melee stance to keep attacking. Each attack starts as soon as the weapon is ready again. Only a Fire press made in the stance starts this, so if you're still holding Fire from your gun when the stance begins, press it again."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

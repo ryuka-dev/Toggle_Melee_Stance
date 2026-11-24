@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Przytrzymanie strzału powtarza atak wręcz"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Wymaga FirePerformsMeleeAttack. W postawie walki wręcz przytrzymanie strzału ponawia ataki: kolejny atak zaczyna się, gdy tylko broń jest znów gotowa. Powtarzanie zaczyna się tylko od naciśnięcia strzału w postawie, więc jeśli strzał był już przytrzymany z bronią palną w chwili rozpoczęcia postawy, atak nastąpi dopiero po ponownym naciśnięciu."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

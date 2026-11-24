@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Mantener Disparo para repetir el ataque cuerpo a cuerpo"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Requiere FirePerformsMeleeAttack. En la postura de combate, mantener Disparo sigue atacando: el siguiente ataque empieza en cuanto el arma vuelve a estar lista. La repetición solo empieza con una pulsación de Disparo hecha en la postura, así que si Disparo ya estaba pulsado con el arma de fuego al empezar la postura, no ataca hasta que se vuelva a pulsar."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Håll in eld för att upprepa närstridsattack"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Kräver FirePerformsMeleeAttack. I närstridsställning fortsätter du attackera så länge eld hålls in: nästa attack börjar så snart vapnet är redo igen. Upprepningen startar bara från ett tryck på eld i ställningen, så om eld redan hålls in med skjutvapnet när ställningen börjar attackerar du inte förrän du trycker igen."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

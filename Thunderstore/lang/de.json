@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Feuer halten wiederholt Nahkampfangriff"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "Erfordert FirePerformsMeleeAttack. In der Nahkampfhaltung greift gehaltenes Feuer fortlaufend an: Der nächste Angriff beginnt, sobald die Waffe wieder bereit ist. Die Wiederholung startet nur durch einen Feuer-Druck in der Nahkampfhaltung. Wird Feuer schon mit der Schusswaffe gehalten, wenn die Haltung beginnt, wird erst nach erneutem Drücken angegriffen."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

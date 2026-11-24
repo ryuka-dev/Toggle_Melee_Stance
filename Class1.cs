@@ -27,6 +27,7 @@ namespace ToggleMeleeStance
 
         internal static ConfigEntry<bool> EnableMod;
         internal static ConfigEntry<bool> FirePerformsMeleeAttack;
+        internal static ConfigEntry<bool> HoldFireToRepeatMeleeAttack;
         internal static ConfigEntry<bool> ResetMeleeAnimatorBeforeSheathe;
         internal static ConfigEntry<bool> DisableWhenMeleeExpansionDetected;
         internal static ConfigEntry<bool> KeepMeleeStanceAfterExternalWeaponSwitch;
@@ -78,6 +79,15 @@ namespace ToggleMeleeStance
         private static FieldInfo fMeleeFireAction;
         private static FieldInfo fMeleeFireActionAlternative;
         private static FieldInfo fSelectLastUsedAction;
+
+        // Optional members for HoldFireToRepeatMeleeAttack: the Fire action, and the two checks
+        // the game's own PullTrigger makes before it fires (shooting prevented by charm status or
+        // the Endless card selection, and the weapon player lock). A missing member disables only
+        // that option.
+        private static FieldInfo fFireAction;
+        private static FieldInfo fShootingPrevented;
+        private static MethodInfo mGameManagerHasLock;
+        private static object[] hasLockWeaponArgs;
 
         private static FieldInfo fCurrentHoldable;
         private static FieldInfo fEquipmentManager;
@@ -143,6 +153,13 @@ namespace ToggleMeleeStance
                 "FirePerformsMeleeAttack",
                 true,
                 "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
+            );
+
+            HoldFireToRepeatMeleeAttack = Config.Bind(
+                "Melee",
+                "HoldFireToRepeatMeleeAttack",
+                false,
+                "Requires FirePerformsMeleeAttack. Hold Fire in melee stance to keep attacking. Each attack starts as soon as the weapon is ready again. Only a Fire press made in the stance starts this, so if you're still holding Fire from your gun when the stance begins, press it again."
             );
 
             ReChargeRetryInterval = Config.Bind(
@@ -328,6 +345,16 @@ namespace ToggleMeleeStance
                 Logger.LogWarning(
                     "HideAmmoCounterInMeleeStance is unavailable: could not resolve PlayerHUD.ManualUpdate() " +
                     "or the ammo counter members it needs."
+                );
+            }
+
+            // HoldFireToRepeatMeleeAttack needs no patch of its own: it runs in the stance's
+            // per-frame update (MaintainToggledMelee).
+            if (!IsRepeatAttackResolved())
+            {
+                Logger.LogWarning(
+                    "HoldFireToRepeatMeleeAttack is unavailable: could not resolve EquipmentManager.fireAction, " +
+                    "EquipmentManager.shootingPrevented or GameManager.HasLock(PlayerLocks.Weapon)."
                 );
             }
 
@@ -546,6 +573,7 @@ namespace ToggleMeleeStance
             mEquipmentManagerOnDestroy = AccessTools.Method(equipmentManagerType, "OnDestroy", Type.EmptyTypes);
 
             ResolveAmmoCounterMembers();
+            ResolveRepeatAttackMembers();
 
             return Require(mHandleAimInput, "EquipmentManager.HandleAimInput(bool)") &&
                    Require(mHandleMeleeInput, "EquipmentManager.HandleMeleeInput(bool)") &&
@@ -700,6 +728,54 @@ namespace ToggleMeleeStance
                 if (noneField != null && noneField.IsStatic && noneField.FieldType == fHudLastActiveWeapon.FieldType)
                     itemIdNoneValue = noneField.GetValue(null);
             }
+        }
+
+        // The game calls PullTrigger only on the frame Fire is pressed, so a held Fire is read from
+        // the action itself. A repeated attack starts from our own code rather than from
+        // PullTrigger, so it makes the same checks PullTrigger makes before firing.
+        private static void ResolveRepeatAttackMembers()
+        {
+            fFireAction = FindFieldRecursive(equipmentManagerType, "fireAction");
+
+            if (fFireAction != null && !typeof(InputAction).IsAssignableFrom(fFireAction.FieldType))
+                fFireAction = null;
+
+            fShootingPrevented = FindFieldRecursive(equipmentManagerType, "shootingPrevented");
+
+            if (fShootingPrevented != null && fShootingPrevented.FieldType != typeof(bool))
+                fShootingPrevented = null;
+
+            if (gameManagerType == null)
+                return;
+
+            // Looked up with its exact parameter type, so an overload added by a game update
+            // leaves it unresolved instead of making the lookup ambiguous.
+            Type playerLocksType = AccessTools.Inner(gameManagerType, "PlayerLocks");
+
+            if (playerLocksType == null || !playerLocksType.IsEnum)
+                return;
+
+            object weaponLock = ParseEnumOrNull(playerLocksType, "Weapon");
+
+            if (weaponLock == null)
+                return;
+
+            MethodInfo hasLock = AccessTools.Method(gameManagerType, "HasLock", new Type[] { playerLocksType });
+
+            if (hasLock == null || hasLock.ReturnType != typeof(bool))
+                return;
+
+            mGameManagerHasLock = hasLock;
+            hasLockWeaponArgs = new object[] { weaponLock };
+        }
+
+        private static bool IsRepeatAttackResolved()
+        {
+            return fFireAction != null &&
+                   fShootingPrevented != null &&
+                   mGameManagerHasLock != null &&
+                   hasLockWeaponArgs != null &&
+                   pGameManagerInstance != null;
         }
 
         private static bool IsAmmoCounterHidingResolved()
@@ -1162,6 +1238,17 @@ namespace ToggleMeleeStance
             if (!FirePerformsMeleeAttack.Value)
                 return false;
 
+            // A Fire press made in the stance. Holding it from here on repeats the attack (see
+            // TryRepeatAttackWhileFireHeld), also when this press itself lands during an attack
+            // or before the weapon is drawn again and so does not attack. A press the game would
+            // refuse to fire (Endless card selection, charm) does not count: holding it must not
+            // start attacking once the block lifts.
+            if (HoldFireToRepeatMeleeAttack.Value && IsRepeatAttackResolved() && !IsWeaponUseBlocked(__instance))
+            {
+                state.RepeatAttackArmed = true;
+                state.RepeatAttackCheckFrame = Time.frameCount;
+            }
+
             object currentHoldable = GetCurrentHoldable(__instance);
 
             if (!IsMeleeWeapon(currentHoldable))
@@ -1179,18 +1266,96 @@ namespace ToggleMeleeStance
             if (state.AttackInProgress)
                 return false;
 
+            StartStanceAttack(__instance, state, "Fire action converted to melee attack.");
+
+            return false;
+        }
+
+        // The one place a stance attack starts, for a Fire press and for a held Fire alike. The
+        // caller has checked that the stance holds a charging melee weapon and no attack is running.
+        private static void StartStanceAttack(object equipmentManager, ToggleState state, string logMessage)
+        {
             state.AttackInProgress = true;
             state.SheatheAfterAttack = false;
             state.SuppressMeleeUntilReleased = false;
 
             if (LogStateChanges.Value)
             {
-                Log?.LogInfo("Fire action converted to melee attack.");
+                Log?.LogInfo(logMessage);
             }
 
-            InvokeUseBasicMelee(__instance);
+            InvokeUseBasicMelee(equipmentManager);
+        }
 
-            return false;
+        // HoldFireToRepeatMeleeAttack. Fire held since a press made in the stance starts the next
+        // attack once the previous one has finished and the weapon is charging again (the stance
+        // draws it again after every attack, see ReportMeleeDonePostfix). Called from
+        // MaintainToggledMelee, which the game's equipment input update reaches every frame the
+        // stance is on, after the game has read this frame's Fire press: a press that started an
+        // attack has set AttackInProgress by then.
+        private static void TryRepeatAttackWhileFireHeld(object equipmentManager, ToggleState state)
+        {
+            if (!state.RepeatAttackArmed)
+                return;
+
+            if (!HoldFireToRepeatMeleeAttack.Value || !FirePerformsMeleeAttack.Value || !IsRepeatAttackResolved())
+                return;
+
+            if (state.AttackInProgress || state.SheatheAfterAttack)
+                return;
+
+            // PullTrigger refuses to fire while shooting is prevented or weapons are locked.
+            if (IsWeaponUseBlocked(equipmentManager))
+                return;
+
+            // UseBasicMelee swings only in the basic melee slot; anywhere else it would leave
+            // AttackInProgress set with no attack to finish it.
+            if (!IsBasicMeleeSlotSelected(equipmentManager))
+                return;
+
+            object currentHoldable = GetCurrentHoldable(equipmentManager);
+
+            if (!IsMeleeWeapon(currentHoldable) || !IsMeleeCharging(currentHoldable))
+                return;
+
+            StartStanceAttack(equipmentManager, state, "Fire held. Repeating melee attack.");
+        }
+
+        // The stance stops repeating once Fire is let go; only a new press in the stance arms it
+        // again. The release is only seen while the game runs its equipment input update, which
+        // it skips in the inventory, dialogue, pause and under the straitjacket status. A frame
+        // without that update may have hidden a release, so it ends the repeat too. Without the
+        // members the option needs, nothing is held.
+        private static void DisarmRepeatAttackIfFireReleased(object equipmentManager, ToggleState state)
+        {
+            if (!state.RepeatAttackArmed)
+                return;
+
+            int frame = Time.frameCount;
+            bool missedFrame = frame - state.RepeatAttackCheckFrame > 1;
+            state.RepeatAttackCheckFrame = frame;
+
+            InputAction fire = IsRepeatAttackResolved() ? GetInputAction(fFireAction, equipmentManager) : null;
+
+            if (missedFrame || fire == null || !fire.IsPressed())
+                state.RepeatAttackArmed = false;
+        }
+
+        // The two checks PullTrigger makes before it fires. Only called once
+        // IsRepeatAttackResolved() holds.
+        private static bool IsWeaponUseBlocked(object equipmentManager)
+        {
+            if (GetBoolField(fShootingPrevented, equipmentManager))
+                return true;
+
+            object gameManager = pGameManagerInstance.GetValue(null, null);
+
+            if (gameManager == null)
+                return true;
+
+            object locked = mGameManagerHasLock.Invoke(gameManager, hasLockWeaponArgs);
+
+            return locked is bool && (bool)locked;
         }
 
         private static bool ReleaseTriggerPrefix(object __instance)
@@ -1959,6 +2124,10 @@ namespace ToggleMeleeStance
             state.LastMaintainTime = Time.time;
             state.CompletingMeleeAttack = false;
 
+            // Fire held from before the stance is not a press made in it, whatever ended the
+            // previous stance.
+            state.RepeatAttackArmed = false;
+
             state.PendingTapHold = false;
             state.LongPressPassThrough = false;
             state.WasMeleeHeldLastFrame = false;
@@ -2024,6 +2193,9 @@ namespace ToggleMeleeStance
             ToggleState state
         )
         {
+            // Before the attack check: Fire let go during an attack ends the repeat.
+            DisarmRepeatAttackIfFireReleased(equipmentManager, state);
+
             if (state.AttackInProgress || state.SheatheAfterAttack)
                 return;
 
@@ -2042,7 +2214,10 @@ namespace ToggleMeleeStance
             UpdateCurrentMeleeAlternativeAnimator(equipmentManager, altHeld);
 
             if (IsInMeleeCharge(equipmentManager))
+            {
+                TryRepeatAttackWhileFireHeld(equipmentManager, state);
                 return;
+            }
 
             if (Time.time < state.NextChargeAttemptTime)
                 return;
@@ -2855,6 +3030,13 @@ namespace ToggleMeleeStance
             // True between ReportMeleeDonePrefix and ReportMeleeDonePostfix, while the game's own
             // attack completion switches the equipment back off the basic melee slot.
             public bool CompletingMeleeAttack;
+
+            // HoldFireToRepeatMeleeAttack: set by a Fire press in the stance, cleared when Fire is
+            // let go, when a frame passes without the release check, and whenever the stance starts.
+            public bool RepeatAttackArmed;
+
+            // Time.frameCount of the last release check (or of the arming press).
+            public int RepeatAttackCheckFrame;
 
             // Time.time of the last frame the game ran its equipment input update
             // (HandleMeleeInput), whether or not the stance is on.

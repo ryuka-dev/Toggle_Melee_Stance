@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "발사 길게 눌러 근접 공격 반복"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "FirePerformsMeleeAttack이 필요합니다. 근접 자세에서 발사를 누르고 있으면 계속 공격합니다. 무기가 다시 준비되는 즉시 다음 공격이 시작됩니다. 반복은 근접 자세에서 누른 발사로만 시작되므로, 총을 들고 있을 때부터 발사를 누른 채 자세에 들어가면 다시 누를 때까지 공격하지 않습니다."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

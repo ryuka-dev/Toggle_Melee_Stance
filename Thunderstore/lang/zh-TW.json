@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "按住開火連續近戰攻擊"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "需要開啟「開火時進行近戰攻擊」。近戰架勢中按住開火會持續攻擊：武器一準備好就開始下一次攻擊。只有在近戰架勢中按下的開火才會開始連續攻擊，所以從槍械狀態一直按住開火進入架勢時不會攻擊，需要重新按一次。"
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "重新蓄力重試間隔"
     },

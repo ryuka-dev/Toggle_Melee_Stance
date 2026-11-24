@@ -14,6 +14,7 @@ This mod can be used by itself, and it is also used as the shared prerequisite m
 - By default, hold the melee key to use the original melee behavior.
 - Pick another melee input mode if you prefer: swap tap and hold, toggle on every press, or keep the melee key exactly as in the base game and enter the stance by holding it and pressing Fire.
 - While melee stance is toggled on, press the normal Fire action to perform one melee attack.
+- Turn on `HoldFireToRepeatMeleeAttack` to keep attacking while Fire is held (off by default).
 - While melee stance is toggled on, hold Aim / Alt Fire to use the vanilla alternative melee stance or block.
 - While melee stance is toggled on, press a weapon slot key to leave the stance and switch straight to that slot, without pressing the melee key first. Consumables in slots 3-5 are used without leaving the stance.
 - While melee stance is toggled on, the last used weapon key and the scroll wheel / d-pad leave the stance and take you back to the weapon you had out before it.
@@ -49,6 +50,7 @@ Hold Melee key
 
 Fire
 → Perform one melee attack while melee stance is toggled on
+→ With HoldFireToRepeatMeleeAttack on, hold it to keep attacking
 
 Aim / Alt Fire
 → Keep vanilla alternative melee stance / block behavior
@@ -152,6 +154,7 @@ EnableMod = true
 
 [Melee]
 FirePerformsMeleeAttack = true
+HoldFireToRepeatMeleeAttack = false
 ReChargeRetryInterval = 0.08
 MeleeInputMode = TapToggleHoldQuickMelee
 # Deprecated, read once for migration
@@ -181,6 +184,20 @@ Enables or disables the mod.
 `FirePerformsMeleeAttack`
 
 When enabled, pressing the normal Fire action while melee is toggled on performs one melee attack.
+
+`HoldFireToRepeatMeleeAttack`
+
+Hold Fire in melee stance to keep attacking, like an automatic weapon, instead of pressing Fire for every swing. It doesn't attack any faster than pressing Fire quickly would. Each attack starts as soon as the weapon is ready again. Off by default. Needs `FirePerformsMeleeAttack`.
+
+```text
+→ Only a Fire press made in the stance starts it.
+→ If you're still holding Fire from your gun when the stance begins, press it again.
+→ Let go of Fire to stop. The current swing still finishes.
+→ Opening the inventory or pausing also stops it. Press Fire again afterwards.
+→ Holding Fire doesn't attack while the game blocks shooting, for example while you're charmed or picking an Endless card.
+```
+
+With The Dragonblade, the dash only works between attacks, so let go of Fire when you want to dash.
 
 `ReChargeRetryInterval`
 

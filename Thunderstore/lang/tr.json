@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "Ateşi basılı tutarak yakın dövüş saldırısını tekrarla"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "FirePerformsMeleeAttack gerektirir. Yakın dövüş duruşunda ateş tuşunu basılı tutmak saldırmaya devam eder: silah yeniden hazır olur olmaz bir sonraki saldırı başlar. Tekrar yalnızca duruştayken yapılan bir ateş basışıyla başlar; duruş başladığında ateş ateşli silahla zaten basılı tutuluyorsa, yeniden basılana kadar saldırı yapılmaz."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

@@ -45,6 +45,14 @@
       "value": "When melee stance is toggled on, pressing the normal Fire action performs one melee attack."
     },
     {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.name",
+      "value": "الاستمرار بالضغط على إطلاق النار لتكرار الهجوم القريب"
+    },
+    {
+      "key": "entry.Melee.HoldFireToRepeatMeleeAttack.description",
+      "value": "يتطلب FirePerformsMeleeAttack. في وضعية القتال القريب، يؤدي الاستمرار بالضغط على إطلاق النار إلى مواصلة الهجوم: يبدأ الهجوم التالي فور جاهزية السلاح مجددًا. لا يبدأ التكرار إلا بضغطة على إطلاق النار داخل الوضعية، لذا إذا كان إطلاق النار مضغوطًا بالفعل بالسلاح الناري عند بدء الوضعية، فلن يحدث هجوم حتى تضغط مجددًا."
+    },
+    {
       "key": "entry.Melee.ReChargeRetryInterval.name",
       "value": "Re Charge Retry Interval"
     },

@@ -85,4 +85,17 @@ version consistency (manifest / CHANGELOG / `PluginVersion`) and builds the rele
   melee weapon is held in a charge or swing, and turns a counter on only when `_lastActiveWeapon`
   changes. A postfix turns `_lastActiveAmmoCounter` off and sets `_lastActiveWeapon` to
   `ItemId.None`, so the game turns the counter back on by itself when a gun is held again.
+- `HoldFireToRepeatMeleeAttack`: the game calls `PullTrigger` only on the frame Fire is pressed
+  (`fireAction.WasPerformedThisFrame()`), so a held Fire never reaches `PullTriggerPrefix` again.
+  `MaintainToggledMelee`, which runs every frame the stance is on and after the game has read Fire,
+  starts the next attack through the same `StartStanceAttack` once the weapon is charging again
+  (`isInMeleeCharge` and the `Charge` animator bool; the stance redraws the weapon after every
+  attack in `ReportMeleeDonePostfix`). The repeat is armed only by a Fire press that reaches
+  `PullTriggerPrefix` in the stance while the game would let it fire, and disarmed when Fire is
+  released, when the stance starts, and when a frame passes without the release check (the game
+  skips `UpdateControls` outside `GameState.Running` and under the straitjacket status, so a
+  release there is never seen). Fire held from a gun, and the Fire that enters the stance in
+  `QuickMeleeChordToggle`, therefore do not attack. Each repeated attack makes the two checks
+  `PullTrigger` makes before firing (`shootingPrevented`, `GameManager.HasLock(PlayerLocks.Weapon)`).
+  A Fire press itself still bypasses them, as before.
 - Target game version: SULFUR 1.0.6 (verified in game, build 26490055).
